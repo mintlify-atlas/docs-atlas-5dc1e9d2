@@ -1,0 +1,123 @@
+{
+  "projectType": "frontend",
+  "projectName": "Pranavbuilds Portfolio",
+  "projectDescription": "An interactive portfolio experience blending GUI desktop and CLI terminal interfaces with dynamic window management and real-time integrations.",
+  "theme": "palm",
+  "primaryColor": "#04f98c",
+  "lightColor": "#04a6b1",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/overview",
+              "features/desktop-mode",
+              "features/terminal-mode",
+              "features/window-system",
+              "features/wallpaper-customization"
+            ]
+          },
+          {
+            "group": "Components",
+            "pages": [
+              "components/terminal",
+              "components/windows",
+              "components/floating-dock",
+              "components/ui-elements"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/spotify",
+              "integrations/pdf-viewer",
+              "integrations/firebase"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "RAG Chatbot API",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "api/introduction",
+              "api/setup",
+              "api/configuration"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "api/chat",
+              "api/documents",
+              "api/admin"
+            ]
+          },
+          {
+            "group": "Guide",
+            "pages": [
+              "api/architecture",
+              "api/rag-system",
+              "api/embeddings"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Development",
+            "pages": [
+              "development/setup",
+              "development/environment-variables",
+              "development/deployment"
+            ]
+          },
+          {
+            "group": "Terminal Commands",
+            "pages": [
+              "terminal/commands",
+              "terminal/file-system",
+              "terminal/customization"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Dual interface with GUI desktop and CLI terminal modes",
+    "Dynamic window management with draggable, resizable windows",
+    "Interactive terminal with Unix-like commands and file system",
+    "Real-time Spotify integration showing now playing and playlists",
+    "Custom wallpaper system with dynamic background changes",
+    "RAG-powered chatbot backend using Azure OpenAI and pgvector",
+    "PDF viewer for embedded document display",
+    "Neumorphic design with smooth Framer Motion animations",
+    "Firebase integration for data persistence"
+  ],
+  "publicApiSurface": [
+    "Terminal commands: help, ls, cd, cat, mkdir, touch, rm, experience, github",
+    "Window components: AboutWindow, ProjectsWindow, ExperienceWindow, SkillsWindow, SpotifyWindow, BooksWindow, BrowserWindow, SettingsWindow, GamesWindow, PdfWindow, PranavChatWindow",
+    "UI components: FloatingDock, DesktopIcons, WindowWrapper, ButtonToggle, Quote",
+    "Spotify API routes: /api/spotify/now-playing, /api/spotify/playlists, /api/spotify/recently-played, /api/spotify/top-tracks, /api/spotify/top-artists",
+    "RAG Chatbot API: POST /chat, POST /admin/documents, GET /admin/documents, GET /admin/documents/:id, DELETE /admin/documents/:id",
+    "Contexts: WindowContext for window state management",
+    "Utilities: spotify.ts, firebase.ts, math.ts, utils.ts"
+  ]
+}
