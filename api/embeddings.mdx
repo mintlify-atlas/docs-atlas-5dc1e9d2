@@ -11,7 +11,7 @@ Learn how Pranav AI generates vector embeddings for semantic search.
 
 Embeddings are vector representations of text that capture semantic meaning:
 
-```
+```text
 Text: "Python programming language"
 
 Embedding: [0.123, -0.456, 0.789, -0.234, ...] (384 dimensions)
@@ -251,7 +251,7 @@ The chunking algorithm tries to break at natural boundaries:
 
 **Input text** (1500 characters):
 
-```
+```text
 Pranav is a software engineer with 5 years of experience. He specializes 
 in backend development using Python and Go.
 
@@ -280,13 +280,13 @@ chunks = [
 Overlapping chunks prevents information loss:
 
 **Without overlap**:
-```
+```text
 Chunk 1: "...experience with FastAPI and"
 Chunk 2: "Django for building REST APIs..."
 ```
 
 **With overlap**:
-```
+```text
 Chunk 1: "...experience with FastAPI and Django for..."
 Chunk 2: "...FastAPI and Django for building REST APIs..."
 ```
