@@ -1,0 +1,412 @@
+---
+title: UI Components
+description: Reusable UI components including buttons, loaders, progress indicators, and utility components
+---
+
+Collection of reusable UI components used throughout the portfolio application.
+
+## ButtonToggle
+
+Toggle button for switching between CLI and GUI modes.
+
+### Props
+
+<ParamField path="isCLI" type="boolean" required>
+  Current mode state (true for CLI, false for GUI).
+</ParamField>
+
+<ParamField path="onToggle" type="() => void" required>
+  Callback function when toggle is clicked.
+</ParamField>
+
+### Example Usage
+
+```typescript
+import { ToggleButton } from '@/components/ui/ButtonToggle';
+import { useState } from 'react';
+
+function App() {
+  const [isCLI, setIsCLI] = useState(false);
+
+  return (
+    <ToggleButton
+      isCLI={isCLI}
+      onToggle={() => setIsCLI(!isCLI)}
+    />
+  );
+}
+```
+
+### Component Source
+
+```typescript
+import { Terminal as TerminalIcon, Monitor } from 'lucide-react';
+
+interface ToggleButtonProps {
+  isCLI: boolean;
+  onToggle: () => void;
+}
+
+export function ToggleButton({ isCLI, onToggle }: ToggleButtonProps) {
+  return (
+    <button
+      onClick={onToggle}
+      className="fixed bottom-20 sm:bottom-24 right-4 sm:right-8 p-3 sm:p-4 rounded-full bg-white/50 backdrop-blur-sm text-black shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-300 z-50 min-w-[44px] min-h-[44px] flex items-center justify-center"
+      aria-label="Toggle GUI/CLI mode"
+    >
+      {isCLI ? (
+        <Monitor className="w-5 h-5 sm:w-6 sm:h-6" />
+      ) : (
+        <TerminalIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+      )}
+    </button>
+  );
+}
+```
+
+### Features
+
+- Fixed positioning at bottom-right
+- Responsive sizing for mobile and desktop
+- Icon switches based on current mode
+- Smooth hover and active animations
+- Glassmorphism backdrop effect
+- Touch-friendly minimum size (44px)
+
+## CustomCircularProgress
+
+Animated circular progress indicator with customizable appearance.
+
+### Props
+
+<ParamField path="value" type="number" required>
+  Progress value between 0 and 100.
+</ParamField>
+
+<ParamField path="color" type="string" default="#1DB954">
+  Color of the progress ring (Spotify green by default).
+</ParamField>
+
+<ParamField path="size" type="number" default="80">
+  Size of the circular progress in pixels.
+</ParamField>
+
+<ParamField path="strokeWidth" type="number" default="8">
+  Width of the progress ring stroke.
+</ParamField>
+
+### Example Usage
+
+```typescript
+import { CustomCircularProgress } from '@/components/ui/CustomCircularProgress';
+
+function MusicPlayer() {
+  const [progress, setProgress] = useState(65);
+
+  return (
+    <div>
+      <CustomCircularProgress
+        value={progress}
+        color="#1DB954"
+        size={100}
+        strokeWidth={10}
+      />
+    </div>
+  );
+}
+```
+
+### Component Implementation
+
+```typescript
+interface ProgressProps {
+  value: number;
+  color?: string;
+  size?: number;
+  strokeWidth?: number;
+}
+
+export function CustomCircularProgress({
+  value,
+  color = '#1DB954',
+  size = 80,
+  strokeWidth = 8,
+}: ProgressProps) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (value / 100) * circumference;
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg className="w-full h-full transform -rotate-90">
+        {/* Background circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          className="text-white/20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+        />
+        {/* Progress circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          className="transition-all duration-500 ease-out"
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+        />
+      </svg>
+      {/* Percentage text */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-white/90 font-medium text-lg">{Math.round(value)}%</span>
+      </div>
+    </div>
+  );
+}
+```
+
+### Math Behind the Progress
+
+The circular progress uses SVG stroke-dasharray and stroke-dashoffset:
+
+```typescript
+// Calculate circle dimensions
+const radius = (size - strokeWidth) / 2;
+const circumference = radius * 2 * Math.PI;
+
+// Calculate offset based on progress (0-100)
+const offset = circumference - (value / 100) * circumference;
+```
+
+## LoadingSpinner
+
+Simple loading indicator with icon and text.
+
+### Props
+
+<ParamField path="text" type="string" required>
+  Loading message to display.
+</ParamField>
+
+### Example Usage
+
+```typescript
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+
+function SpotifySection() {
+  const [loading, setLoading] = useState(true);
+
+  if (loading) {
+    return <LoadingSpinner text="Loading your music..." />;
+  }
+
+  return <div>{/* Content */}</div>;
+}
+```
+
+### Component Source
+
+```typescript
+import { IconMusic } from '@tabler/icons-react';
+
+export function LoadingSpinner({ text }: { text: string }) {
+  return (
+    <div className="flex items-center gap-2 text-white/70">
+      <IconMusic className="animate-pulse" size={20} />
+      <span>{text}</span>
+    </div>
+  );
+}
+```
+
+### Features
+
+- Animated pulsing icon
+- Customizable text message
+- Used throughout Spotify integration
+- Simple and lightweight
+
+## Quote Component
+
+Displays an inspirational quote in the top-right corner.
+
+### Example Usage
+
+```typescript
+import { Quote } from '@/components/ui/Quote';
+
+function Layout() {
+  return (
+    <div className="relative min-h-screen">
+      <Quote />
+      {/* Other content */}
+    </div>
+  );
+}
+```
+
+### Component Source
+
+```typescript
+import { motion } from 'framer-motion';
+
+export function Quote() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="absolute top-4 right-4 max-w-xs lg:max-w-md bg-white/5 backdrop-blur-sm p-3 lg:p-4 rounded-lg border border-white/10 hidden lg:block"
+    >
+      <p className="text-white/60 text-sm italic mb-2">
+        &ldquo;Some people never go crazy. What truly horrible lives they must lead.&rdquo;
+      </p>
+      <p className="text-white/40 text-xs text-right">— Charles Bukowski</p>
+    </motion.div>
+  );
+}
+```
+
+### Features
+
+- Fixed position in top-right
+- Hidden on mobile (lg:block)
+- Glassmorphism styling
+- Fade-in animation
+- Responsive text sizing
+
+## Desktop Icons
+
+Clickable desktop icons for launching windows.
+
+### Usage Example
+
+```typescript
+import { DesktopIcons } from '@/components/ui/DesktopIcons';
+
+function Desktop() {
+  const [activeWindow, setActiveWindow] = useState<string | null>(null);
+
+  return (
+    <>
+      <DesktopIcons onIconClick={setActiveWindow} />
+      
+      {activeWindow === 'about' && (
+        <AboutWindow onClose={() => setActiveWindow(null)} />
+      )}
+    </>
+  );
+}
+```
+
+## Helper Components
+
+### Skills Helper
+
+Provides structured skills data:
+
+```typescript
+export const skills = [
+  {
+    category: 'Frontend',
+    items: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS'],
+  },
+  {
+    category: 'Backend',
+    items: ['Node.js', 'Express', 'Python', 'FastAPI'],
+  },
+  // ...
+];
+```
+
+### Projects Helper
+
+Provides project data structure:
+
+```typescript
+export const projects = [
+  {
+    title: 'TeamFinder',
+    description: 'Team collaboration platform',
+    techStack: ['React', 'Node.js', 'MongoDB'],
+    image: '/projects/teamfinder.png',
+    github: 'https://github.com/...',
+    live: 'https://...',
+  },
+  // ...
+];
+```
+
+### Experience Helper
+
+Provides work experience data:
+
+```typescript
+export const experiences = [
+  {
+    id: 1,
+    role: 'LLM Developer Intern',
+    company: 'GradGuide',
+    type: 'Internship',
+    duration: 'May 2025 - Aug 2025',
+    location: 'Remote',
+    description: 'Backend developer specializing in FastAPI...',
+    achievements: [
+      'Successfully deployed RAG-based chatbot API',
+      'Built and optimized recommendation engine',
+    ],
+    technologies: ['Python', 'FastAPI', 'LLM Integration', 'GCP'],
+  },
+  // ...
+];
+```
+
+## Styling Utilities
+
+### Custom Scrollbar
+
+```css
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+```
+
+### Mobile Hide Scrollbar
+
+```css
+.mobile-hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.mobile-hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+```
+
+### Terminal Glow Effect
+
+```css
+.terminal-glow {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+}
+```

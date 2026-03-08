@@ -1,0 +1,449 @@
+---
+title: Chat Endpoint
+description: Send messages and get RAG-powered responses from Pranav AI
+---
+
+# Chat Endpoint
+
+The `/chat` endpoint enables RAG-powered conversations with context from uploaded documents.
+
+## Endpoint
+
+<CodeGroup>
+```bash cURL
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "What are Pranav\"s skills in backend development?"
+  }'
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    "http://localhost:8000/chat",
+    json={
+        "message": "What are Pranav's skills in backend development?"
+    }
+)
+
+data = response.json()
+print(data["response"])
+for source in data["sources"]:
+    print(f"Source: {source['document_name']} (similarity: {source['similarity']})")
+```
+
+```javascript JavaScript
+fetch('http://localhost:8000/chat', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    message: "What are Pranav's skills in backend development?"
+  })
+})
+  .then(res => res.json())
+  .then(data => {
+    console.log('Response:', data.response);
+    console.log('Sources:', data.sources);
+  });
+```
+</CodeGroup>
+
+## POST /chat
+
+Send a message and receive a RAG-powered response with source citations.
+
+### Request Body
+
+<ParamField path="message" type="string" required>
+  The user's question or message.
+  
+  **Example**: `"What are Pranav's skills in backend development?"`
+  
+  <Warning>
+    Message cannot be empty or whitespace-only.
+  </Warning>
+</ParamField>
+
+<ParamField path="chat_history" type="array" default="null">
+  Optional conversation history for context continuity.
+  
+  Array of message objects with `role` and `content` fields.
+  
+  **Example**:
+  ```json
+  [
+    {"role": "user", "content": "What is Pranav's experience?"},
+    {"role": "assistant", "content": "Pranav has 5 years of experience..."}
+  ]
+  ```
+  
+  <Note>
+    Only the last 5 messages from chat history are used to maintain context window limits.
+  </Note>
+</ParamField>
+
+#### Message Object Schema
+
+<ResponseField name="role" type="string" required>
+  Role of the message sender: `"user"` or `"assistant"`
+</ResponseField>
+
+<ResponseField name="content" type="string" required>
+  Content of the message
+</ResponseField>
+
+### Response
+
+<ResponseField name="response" type="string">
+  The AI-generated response based on retrieved context.
+  
+  Generated using Azure OpenAI GPT-4.1 with:
+  - Retrieved document context
+  - System prompt for Pranav AI
+  - Conversation history (if provided)
+  - Temperature: 0.7
+  - Max tokens: 1000
+</ResponseField>
+
+<ResponseField name="sources" type="array">
+  Array of source chunks used to generate the response.
+  
+  Each source includes:
+  - Document ID and name
+  - Relevant content snippet
+  - Similarity score (0-1)
+  
+  Only chunks with similarity > 0.3 are included.
+</ResponseField>
+
+#### Source Chunk Schema
+
+<ResponseField name="document_id" type="uuid">
+  UUID of the source document
+</ResponseField>
+
+<ResponseField name="document_name" type="string">
+  Filename of the source document
+  
+  **Example**: `"pranav_resume.pdf"`
+</ResponseField>
+
+<ResponseField name="content" type="string">
+  Content snippet from the chunk (truncated to 200 characters)
+  
+  Shows the relevant text that contributed to the response.
+</ResponseField>
+
+<ResponseField name="similarity" type="float">
+  Cosine similarity score between query and chunk (0-1)
+  
+  Rounded to 3 decimal places. Higher scores indicate more relevant content.
+  
+  **Example**: `0.847`
+</ResponseField>
+
+## Examples
+
+### Basic Query
+
+<CodeGroup>
+```json Request
+{
+  "message": "What programming languages does Pranav know?"
+}
+```
+
+```json Response
+{
+  "response": "According to backend_dev.pdf, Pranav is proficient in Python, Go, and JavaScript. He has extensive experience with Python for backend development using FastAPI and Django, Go for high-performance microservices, and JavaScript/TypeScript for full-stack development.",
+  "sources": [
+    {
+      "document_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "document_name": "backend_dev.pdf",
+      "content": "Programming Languages: Python (FastAPI, Django), Go (Gin, Echo), JavaScript/TypeScript (Node.js, React). Proficient in writing clean, maintainable code with strong emphasis on testing and documentation...",
+      "similarity": 0.892
+    },
+    {
+      "document_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "document_name": "skills_overview.md",
+      "content": "Core technical skills include Python for ML/AI applications, Go for backend systems, and JavaScript for web development. Strong foundation in data structures and algorithms...",
+      "similarity": 0.754
+    }
+  ]
+}
+```
+</CodeGroup>
+
+### Query with Chat History
+
+<CodeGroup>
+```json Request
+{
+  "message": "What about his database experience?",
+  "chat_history": [
+    {
+      "role": "user",
+      "content": "What programming languages does Pranav know?"
+    },
+    {
+      "role": "assistant",
+      "content": "According to backend_dev.pdf, Pranav is proficient in Python, Go, and JavaScript..."
+    }
+  ]
+}
+```
+
+```json Response
+{
+  "response": "Pranav has extensive database experience with PostgreSQL, MongoDB, and Redis. He has worked with PostgreSQL for relational data including advanced features like pgvector for semantic search, MongoDB for document storage, and Redis for caching and real-time features.",
+  "sources": [
+    {
+      "document_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "document_name": "backend_dev.pdf",
+      "content": "Database Technologies: PostgreSQL (including pgvector extension), MongoDB, Redis. Experience with database design, optimization, and scaling for high-traffic applications...",
+      "similarity": 0.823
+    }
+  ]
+}
+```
+</CodeGroup>
+
+### No Relevant Information
+
+<CodeGroup>
+```json Request
+{
+  "message": "What is Pranav's favorite color?"
+}
+```
+
+```json Response
+{
+  "response": "I couldn't find relevant information to answer your question in my knowledge base.",
+  "sources": []
+}
+```
+</CodeGroup>
+
+### No Documents Uploaded
+
+<CodeGroup>
+```json Request
+{
+  "message": "Tell me about Pranav"
+}
+```
+
+```json Response
+{
+  "response": "I don't have any documents in my knowledge base yet. Please upload some documents first.",
+  "sources": []
+}
+```
+</CodeGroup>
+
+## How It Works
+
+The chat endpoint follows this RAG (Retrieval Augmented Generation) flow:
+
+### 1. Embedding Generation
+
+```python
+# Generate embedding for user query
+query_embedding = generate_embedding(request.message)
+# Uses sentence-transformers all-MiniLM-L6-v2 model
+# Returns 384-dimensional vector
+```
+
+### 2. Vector Similarity Search
+
+```sql
+SELECT 
+    c.id,
+    c.document_id,
+    c.content,
+    d.filename,
+    1 - (c.embedding <=> '[0.1,0.2,...]'::vector) as similarity
+FROM chunks c
+JOIN documents d ON c.document_id = d.id
+ORDER BY c.embedding <=> '[0.1,0.2,...]'::vector
+LIMIT 5
+```
+
+- Uses pgvector's cosine similarity operator `<=>`
+- Retrieves top 5 most similar chunks
+- Joins with documents table for metadata
+
+### 3. Context Filtering
+
+```python
+if similarity > 0.3:  # Only include relevant chunks
+    context_parts.append(f"[From: {filename}]\n{content}")
+```
+
+- Filters chunks with similarity > 0.3
+- Adds source attribution to each chunk
+- Builds combined context string
+
+### 4. LLM Generation
+
+System prompt used:
+
+```
+You are Pranav AI, a helpful assistant that answers questions about Pranav 
+based on the provided context.
+
+**Rules:**
+- Answer questions based ONLY on the provided context
+- If the context doesn't contain relevant information, say "I don't have 
+  information about that in my knowledge base"
+- Be concise and direct in your responses
+- Use a friendly, professional tone
+- When information comes from different documents, clearly distinguish and 
+  attribute information to each source
+- Always mention which document the information came from when relevant
+
+**Context:**
+{context}
+```
+
+Request to Azure OpenAI:
+
+```python
+response = await client.chat.completions.create(
+    model="gpt-4.1",
+    messages=[
+        {"role": "system", "content": SYSTEM_PROMPT.format(context=context)},
+        *chat_history[-5:],  # Last 5 messages
+        {"role": "user", "content": query}
+    ],
+    temperature=0.7,
+    max_tokens=1000
+)
+```
+
+## Error Responses
+
+### Empty Message
+
+<CodeGroup>
+```json Request
+{
+  "message": "   "
+}
+```
+
+```json Response (400 Bad Request)
+{
+  "detail": "Message cannot be empty"
+}
+```
+</CodeGroup>
+
+### Invalid Request Format
+
+<CodeGroup>
+```json Request
+{
+  "msg": "This is wrong field name"
+}
+```
+
+```json Response (422 Unprocessable Entity)
+{
+  "detail": [
+    {
+      "loc": ["body", "message"],
+      "msg": "field required",
+      "type": "value_error.missing"
+    }
+  ]
+}
+```
+</CodeGroup>
+
+## Implementation Details
+
+From `src/routes/chat.py:39`:
+
+```python
+@router.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Send a message and get a RAG-powered response.
+    
+    - Generates embedding for the query
+    - Searches for similar chunks using pgvector
+    - Generates response using Azure OpenAI with context
+    - Returns response with source citations
+    """
+    if not request.message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    
+    # Generate embedding for the query
+    query_embedding = generate_embedding(request.message)
+    
+    # Search for similar chunks using pgvector cosine similarity
+    # ... (vector search query)
+    
+    # Build context from retrieved chunks
+    context_parts = []
+    sources = []
+    
+    for row in rows:
+        if similarity > 0.3:
+            context_parts.append(f"[From: {filename}]\n{content}")
+            sources.append(SourceChunk(...))
+    
+    # Generate response using LLM
+    response = await generate_response(
+        query=request.message,
+        context=context,
+        chat_history=chat_history
+    )
+    
+    return ChatResponse(response=response, sources=sources)
+```
+
+## Performance Considerations
+
+- **Embedding Generation**: ~10-50ms locally with all-MiniLM-L6-v2
+- **Vector Search**: ~5-20ms with pgvector indexes
+- **LLM Generation**: ~500-2000ms depending on Azure OpenAI latency
+- **Total Response Time**: ~1-3 seconds typical
+
+### Optimization Tips
+
+<CardGroup cols={2}>
+  <Card title="Index Vectors" icon="database">
+    Create pgvector indexes for faster similarity search:
+    ```sql
+    CREATE INDEX ON chunks USING ivfflat (embedding vector_cosine_ops);
+    ```
+  </Card>
+  
+  <Card title="Batch Requests" icon="layer-group">
+    Process multiple questions in parallel when possible.
+  </Card>
+  
+  <Card title="Cache Common Queries" icon="clock-rotate-left">
+    Cache responses for frequently asked questions.
+  </Card>
+  
+  <Card title="Limit Context Size" icon="compress">
+    Reduce max tokens if responses are too long.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Document Management" icon="file" href="/api/documents">
+    Learn how to upload and manage documents
+  </Card>
+  <Card title="RAG System" icon="brain" href="/api/rag-system">
+    Deep dive into the RAG implementation
+  </Card>
+</CardGroup>

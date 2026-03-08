@@ -1,0 +1,263 @@
+---
+title: Setup Guide
+description: Install and configure the Pranav AI RAG Chatbot backend
+---
+
+# Setup Guide
+
+Get the Pranav AI RAG Chatbot backend up and running in minutes.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- **Python 3.11+** installed
+- **PostgreSQL** database with **pgvector** extension
+- **Azure OpenAI** account with GPT-4.1 deployment
+- **uv** package manager ([install here](https://github.com/astral-sh/uv))
+
+## Installation
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone or download the source code to your local machine:
+    
+    ```bash
+    git clone <repository-url>
+    cd pranav
+    ```
+  </Step>
+
+  <Step title="Install dependencies with uv">
+    The project uses `uv` as the package manager. Install all dependencies:
+    
+    ```bash
+    uv sync
+    ```
+    
+    This installs all required packages from `pyproject.toml`:
+    
+    - **fastapi** (>=0.109.0) - Web framework
+    - **uvicorn[standard]** (>=0.27.0) - ASGI server
+    - **sqlalchemy[asyncio]** (>=2.0.0) - Async ORM
+    - **asyncpg** (>=0.29.0) - PostgreSQL async driver
+    - **pgvector** (>=0.2.0) - Vector extension for PostgreSQL
+    - **openai** (>=1.0.0) - Azure OpenAI client
+    - **sentence-transformers** (>=2.2.0) - Local embeddings
+    - **torch** (>=2.0.0) - PyTorch for transformers
+    - **pypdf** (>=4.0.0) - PDF text extraction
+    - **python-multipart** (>=0.0.6) - File upload handling
+    - **pydantic-settings** (>=2.0.0) - Settings management
+    - **python-dotenv** (>=1.0.0) - Environment variable loading
+  </Step>
+
+  <Step title="Set up PostgreSQL with pgvector">
+    Create a PostgreSQL database and enable the pgvector extension:
+    
+    ```sql
+    CREATE DATABASE pranav_ai;
+    \c pranav_ai
+    CREATE EXTENSION vector;
+    ```
+    
+    The application will automatically create the required tables on first run:
+    
+    - `documents` - Stores document metadata
+    - `chunks` - Stores text chunks with vector embeddings (384 dimensions)
+    
+    <Note>
+      The pgvector extension must be installed in your PostgreSQL instance. See [pgvector installation](https://github.com/pgvector/pgvector#installation) for details.
+    </Note>
+  </Step>
+
+  <Step title="Configure environment variables">
+    Create a `.env` file in the project root with your configuration:
+    
+    ```bash .env
+    # Azure OpenAI Configuration
+    AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+    AZURE_OPENAI_API_KEY=your-api-key-here
+    AZURE_OPENAI_API_VERSION=2024-02-15-preview
+    AZURE_DEPLOYMENT_NAME=gpt-4.1
+    
+    # Database Configuration
+    DATABASE_URL=postgresql://username:password@localhost:5432/pranav_ai
+    
+    # Optional: App Settings
+    DEBUG=false
+    EMBEDDING_MODEL=all-MiniLM-L6-v2
+    EMBEDDING_DIMENSION=384
+    ```
+    
+    <Warning>
+      Keep your `.env` file secure and never commit it to version control. Add it to `.gitignore`.
+    </Warning>
+    
+    See [Configuration](/api/configuration) for detailed environment variable documentation.
+  </Step>
+
+  <Step title="Run the server">
+    Start the FastAPI development server:
+    
+    ```bash
+    uv run uvicorn main:app --reload --port 8000
+    ```
+    
+    You should see:
+    
+    ```
+    🚀 Starting Pranav AI Backend...
+    ✅ Database initialized
+    INFO:     Uvicorn running on http://127.0.0.1:8000
+    ```
+    
+    The API is now running at `http://localhost:8000`
+  </Step>
+
+  <Step title="Verify installation">
+    Test the API endpoints:
+    
+    ```bash
+    # Check health
+    curl http://localhost:8000/health
+    
+    # View API docs
+    open http://localhost:8000/docs
+    ```
+    
+    You should see:
+    
+    ```json
+    {"status": "healthy"}
+    ```
+  </Step>
+
+  <Step title="Upload your first document">
+    Upload a document to start using the RAG system:
+    
+    ```bash
+    curl -X POST http://localhost:8000/admin/documents \
+      -F "file=@resume.pdf"
+    ```
+    
+    The system will:
+    1. Extract text from the PDF
+    2. Split into chunks (1000 chars, 200 overlap)
+    3. Generate embeddings using all-MiniLM-L6-v2
+    4. Store in PostgreSQL with pgvector
+    
+    See [Document Management](/api/documents) for more details.
+  </Step>
+</Steps>
+
+## Database Schema
+
+The application automatically creates these tables:
+
+### `documents` Table
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `filename` | VARCHAR(255) | Original filename |
+| `content_type` | VARCHAR(100) | MIME type |
+| `file_size` | INTEGER | File size in bytes |
+| `created_at` | TIMESTAMP | Upload timestamp |
+
+### `chunks` Table
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `document_id` | UUID | Foreign key to documents |
+| `content` | TEXT | Chunk text content |
+| `embedding` | VECTOR(384) | Embedding vector |
+| `chunk_index` | INTEGER | Chunk position in document |
+| `created_at` | TIMESTAMP | Creation timestamp |
+
+<Note>
+  Chunks are automatically deleted when their parent document is deleted (CASCADE).
+</Note>
+
+## Development Mode
+
+For development with auto-reload:
+
+```bash
+uv run uvicorn main:app --reload --port 8000
+```
+
+## Production Deployment
+
+For production, use a production ASGI server:
+
+```bash
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+<Warning>
+  Update CORS settings in `main.py` for production. The default `allow_origins=["*"]` is not secure for production use.
+</Warning>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="pgvector extension not found">
+    Install pgvector in your PostgreSQL instance:
+    
+    ```bash
+    # Ubuntu/Debian
+    sudo apt install postgresql-contrib postgresql-server-dev-all
+    git clone https://github.com/pgvector/pgvector.git
+    cd pgvector
+    make
+    sudo make install
+    ```
+    
+    Then enable in your database:
+    
+    ```sql
+    CREATE EXTENSION vector;
+    ```
+  </Accordion>
+  
+  <Accordion title="Azure OpenAI authentication failed">
+    Verify your Azure OpenAI credentials:
+    
+    - Check `AZURE_OPENAI_ENDPOINT` format: `https://your-resource.openai.azure.com/`
+    - Ensure `AZURE_OPENAI_API_KEY` is correct
+    - Verify `AZURE_DEPLOYMENT_NAME` matches your deployment
+    - Check `AZURE_OPENAI_API_VERSION` is supported
+  </Accordion>
+  
+  <Accordion title="Embedding model download slow">
+    The first run downloads the all-MiniLM-L6-v2 model (~80MB). This is a one-time operation. The model is cached locally for future use.
+  </Accordion>
+  
+  <Accordion title="Database connection failed">
+    Verify your `DATABASE_URL` format:
+    
+    ```
+    postgresql://username:password@host:port/database
+    ```
+    
+    The application automatically converts to async format (`postgresql+asyncpg://`).
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/api/configuration">
+    Learn about all environment variables and settings
+  </Card>
+  <Card title="Upload Documents" icon="file-arrow-up" href="/api/documents">
+    Start uploading documents to build your knowledge base
+  </Card>
+  <Card title="Chat Endpoint" icon="messages" href="/api/chat">
+    Learn how to use the chat API
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/api/architecture">
+    Understand the system architecture
+  </Card>
+</CardGroup>

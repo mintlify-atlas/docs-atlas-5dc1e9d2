@@ -1,0 +1,510 @@
+---
+title: 'Terminal Mode'
+description: 'Full-featured CLI terminal with command history and autocomplete'
+icon: 'terminal'
+---
+
+# Terminal Mode
+
+Terminal Mode provides a fully functional command-line interface for navigating the portfolio using Unix-like commands.
+
+## Overview
+
+Toggle to Terminal Mode using the floating button at the bottom-right of the screen. The terminal provides:
+
+- Full filesystem navigation
+- Command history with arrow keys
+- Tab auto-completion
+- Built-in portfolio commands
+- Math expression evaluation
+
+## Getting Started
+
+### First Visit
+
+When you first enter Terminal Mode, you'll be prompted to enter your name:
+
+```bash
+Please enter your name to continue:
+> John Doe
+Welcome John Doe! Type 'help' to see available commands.
+```
+
+<Info>
+  Your name is stored in `sessionStorage` and will be remembered during your session.
+</Info>
+
+### Terminal Interface
+
+The terminal is built in `app/components/Terminal/Terminal.tsx` and features:
+
+```tsx
+// From Terminal.tsx:466-537
+return (
+  <div className="w-full h-full flex justify-center items-center px-4">
+    <div className="border-2 border-neutral-800 rounded-sm w-full max-w-[700px] h-[500px] bg-black/90 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto font-mono">
+      {/* Window controls (red, yellow, green dots) */}
+      <div className="flex gap-1 sm:gap-2">
+        <div className="w-2 h-2 bg-red-500 rounded-full" />
+        <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+        <div className="w-2 h-2 bg-green-500 rounded-full" />
+      </div>
+      
+      {/* Terminal prompt and output */}
+      <div className="p-1 sm:p-2 text-green-100">
+        <TerminalClock />
+        {/* Command history */}
+        {/* Input field */}
+      </div>
+    </div>
+  </div>
+);
+```
+
+## Available Commands
+
+### File System Commands
+
+<Tabs>
+  <Tab title="Navigation">
+    **ls** - List directory contents
+    ```bash
+    guest@portfolio:~$ ls
+    about.txt  projects/  experience/  skills.txt  contact.txt
+    
+    guest@portfolio:~$ cd projects
+    guest@portfolio:~/projects$ ls
+    teamfinder.txt  spotify-bot.txt  quizapp.txt  electrade.txt
+    ```
+    
+    **cd** - Change directory
+    ```bash
+    # Navigate to directory
+    cd projects
+    
+    # Go back
+    cd ..
+    
+    # Return to home
+    cd
+    ```
+    
+    **pwd** - Print working directory
+    ```bash
+    guest@portfolio:~/projects$ pwd
+    ~/projects
+    ```
+  </Tab>
+  
+  <Tab title="File Operations">
+    **cat** - Display file contents
+    ```bash
+    guest@portfolio:~$ cat about.txt
+    I am Pranav, currently pursuing B.E in computer science from chandigarh university.
+    
+    guest@portfolio:~$ cat skills.txt
+    React, Node.js, Express, MongoDB, Python, Django, Flutter
+    ```
+    
+    **mkdir** - Create directory
+    ```bash
+    guest@portfolio:~$ mkdir test
+    guest@portfolio:~$ ls
+    about.txt  projects/  experience/  skills.txt  contact.txt  test/
+    ```
+    
+    **touch** - Create file
+    ```bash
+    guest@portfolio:~$ touch newfile.txt
+    guest@portfolio:~$ ls
+    about.txt  projects/  experience/  skills.txt  contact.txt  newfile.txt
+    ```
+    
+    **rm** - Remove file
+    ```bash
+    guest@portfolio:~$ rm newfile.txt
+    ```
+    
+    <Warning>
+      `rm` cannot remove directories. Use it only on files.
+    </Warning>
+  </Tab>
+  
+  <Tab title="System Commands">
+    **whoami** - Display current user
+    ```bash
+    guest@portfolio:~$ whoami
+    guest
+    ```
+    
+    **date** - Show current date and time
+    ```bash
+    guest@portfolio:~$ date
+    Sun Mar 08 2026 10:30:45 GMT-0800 (Pacific Standard Time)
+    ```
+    
+    **uname** - System information
+    ```bash
+    guest@portfolio:~$ uname
+    Linux
+    
+    guest@portfolio:~$ uname -a
+    Linux portfolio 5.4.0-42-generic #46-Ubuntu x86_64 GNU/Linux
+    ```
+    
+    **history** - View command history
+    ```bash
+    guest@portfolio:~$ history
+    1  ls
+    2  cd projects
+    3  cat about.txt
+    4  history
+    ```
+    
+    **clear** - Clear terminal screen
+    ```bash
+    guest@portfolio:~$ clear
+    ```
+  </Tab>
+  
+  <Tab title="Portfolio Commands">
+    **experience** - Show professional experience
+    ```bash
+    guest@portfolio:~$ experience
+    PROFESSIONAL EXPERIENCE
+    
+    GradGuide - LLM Developer Intern (Backend)
+    May 2025 - Aug 2025 | Remote
+    Backend developer specializing in FastAPI and large language model (LLM) integration.
+    Tech: Python, FastAPI, LLM Integration, RAG Systems, GCP, PostgreSQL, MongoDB
+    
+    💡 Tip: Navigate to ~/experience/ directory to explore detailed files
+    📝 Currently pursuing B.E. in Computer Science at Chandigarh University (2022-2026)
+    ```
+    
+    **github** - Open GitHub profile
+    ```bash
+    guest@portfolio:~$ github
+    Opening GitHub profile...
+    ```
+    
+    **echo** - Display text
+    ```bash
+    guest@portfolio:~$ echo Hello World
+    Hello World
+    ```
+    
+    **help** - Show available commands
+    ```bash
+    guest@portfolio:~$ help
+    Available commands:
+    ls - list directory contents
+    cd - change directory
+    pwd - print working directory
+    cat - display file contents
+    mkdir - create directory
+    touch - create file
+    rm - remove file
+    experience - show professional experience
+    whoami - display current user
+    date - display current date
+    uname - system information
+    history - command history
+    clear - clear terminal
+    echo - display text
+    github - open GitHub profile
+    
+    Use Tab for auto-completion, ↑/↓ for history
+    ```
+  </Tab>
+</Tabs>
+
+## Advanced Features
+
+### Command History Navigation
+
+Navigate through previous commands using arrow keys:
+
+```tsx
+// From Terminal.tsx:107-131
+const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === 'Enter') {
+    processCommand(e);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (historyIndex < commandHistory.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setInput(commandHistory[commandHistory.length - 1 - newIndex]);
+    }
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setInput(commandHistory[commandHistory.length - 1 - newIndex]);
+    } else if (historyIndex === 0) {
+      setHistoryIndex(-1);
+      setInput('');
+    }
+  } else if (e.key === 'Tab') {
+    e.preventDefault();
+    autoComplete();
+  }
+};
+```
+
+<Tip>
+  Press ↑ to cycle backward through history, ↓ to cycle forward. Press Enter on any command to execute it again.
+</Tip>
+
+### Tab Auto-Completion
+
+Press `Tab` to auto-complete file and directory names:
+
+```tsx
+// From Terminal.tsx:133-146
+const autoComplete = () => {
+  const parts = input.trim().split(' ');
+  const lastPart = parts[parts.length - 1];
+  const currentPath = getCurrentPath();
+  
+  if (currentPath.contents) {
+    // Find matches that start with the input
+    const matches = Object.keys(currentPath.contents)
+      .filter(name => name.startsWith(lastPart));
+    
+    // Auto-complete if only one match
+    if (matches.length === 1) {
+      parts[parts.length - 1] = matches[0];
+      setInput(parts.join(' '));
+    }
+  }
+};
+```
+
+**Example:**
+```bash
+guest@portfolio:~$ cat ab<Tab>
+guest@portfolio:~$ cat about.txt
+```
+
+### Math Expression Evaluation
+
+The terminal can evaluate simple math expressions:
+
+```tsx
+// From Terminal.tsx:429-439
+default:
+  // Handle math expressions
+  if (/^\d+[+\-*/]\d+$/.test(fullCommand)) {
+    try {
+      output = safeEvaluate(fullCommand);
+    } catch (error) {
+      output = 'bash: syntax error in expression';
+    }
+  } else {
+    output = `bash: ${command}: command not found`;
+  }
+```
+
+**Example:**
+```bash
+guest@portfolio:~$ 42*2
+84
+```
+
+## File System Structure
+
+The terminal includes a pre-populated virtual filesystem:
+
+```tsx
+// From Terminal.tsx:21-64
+const [fileSystem, setFileSystem] = useState({
+  '~': {
+    type: 'directory',
+    contents: {
+      'about.txt': {
+        type: 'file',
+        content: 'I am Pranav, currently pursuing B.E in computer science...'
+      },
+      projects: {
+        type: 'directory',
+        contents: {
+          'teamfinder.txt': { type: 'file', content: 'Team collaboration platform' },
+          'spotify-bot.txt': { type: 'file', content: 'Telegram bot for Spotify integration' },
+          'quizapp.txt': { type: 'file', content: 'Interactive quiz application' },
+          'electrade.txt': { type: 'file', content: 'Electronics trading platform' },
+        },
+      },
+      experience: {
+        type: 'directory',
+        contents: {
+          'gradguide-internship.txt': { 
+            type: 'file', 
+            content: 'GradGuide - LLM Developer Intern...'
+          },
+          'summary.txt': { 
+            type: 'file', 
+            content: 'EXPERIENCE SUMMARY\n\nTotal Experience: 3 months...'
+          },
+        },
+      },
+      'skills.txt': {
+        type: 'file',
+        content: 'React, Node.js, Express, MongoDB, Python, Django, Flutter',
+      },
+      'contact.txt': {
+        type: 'file',
+        content: 'Email: duckieduckk@duck.com\nPhone: nahi bataunga...',
+      },
+    },
+  },
+});
+```
+
+### Directory Tree
+
+```
+~
+├── about.txt
+├── skills.txt
+├── contact.txt
+├── projects/
+│   ├── teamfinder.txt
+│   ├── spotify-bot.txt
+│   ├── quizapp.txt
+│   └── electrade.txt
+└── experience/
+    ├── gradguide-internship.txt
+    └── summary.txt
+```
+
+## Command Processing
+
+Commands are processed in the `processCommand` function:
+
+```tsx
+// From Terminal.tsx:148-455
+const processCommand = async (e: KeyboardEvent<HTMLInputElement>) => {
+  e.preventDefault();
+  
+  const fullCommand = input.trim();
+  const parts = fullCommand.split(' ');
+  const command = parts[0].toLowerCase();
+  const args = parts.slice(1);
+  
+  // Add to command history
+  if (fullCommand) {
+    setCommandHistory(prev => [...prev, fullCommand]);
+    setHistoryIndex(-1);
+  }
+  
+  let output;
+  
+  switch (command) {
+    case 'ls':
+      // List directory contents
+      break;
+    case 'cd':
+      // Change directory
+      break;
+    case 'cat':
+      // Display file contents
+      break;
+    // ... more commands
+  }
+  
+  // Add command and output to history
+  setCommands(prevCommands => [...prevCommands, {
+    id: Date.now(),
+    input: fullCommand,
+    time: getFormattedTime(),
+    output,
+    directory: currentDirectory,
+  }]);
+  
+  setInput('');
+};
+```
+
+## Terminal Clock
+
+A live clock displays at the top of the terminal:
+
+```tsx
+// From Terminal.tsx:6-13
+const TerminalClock = () => {
+  const [time, setTime] = useState(getFormattedTime());
+  
+  useEffect(() => {
+    const timer = setInterval(() => setTime(getFormattedTime()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  
+  return <div className="text-xs mb-2 sm:mb-4 opacity-70">Last login: {time}</div>;
+};
+```
+
+## Toggle Between Modes
+
+The toggle button is always visible in both modes:
+
+```tsx
+// From app/components/ui/ButtonToggle.tsx
+export function ToggleButton({ isCLI, onToggle }: ToggleButtonProps) {
+  return (
+    <button
+      onClick={onToggle}
+      className="fixed bottom-20 sm:bottom-24 right-4 sm:right-8 p-3 sm:p-4 rounded-full bg-white/50 backdrop-blur-sm"
+      aria-label="Toggle GUI/CLI mode"
+    >
+      {isCLI ? (
+        <Monitor className="w-5 h-5 sm:w-6 sm:h-6" /> // Desktop icon when in CLI mode
+      ) : (
+        <TerminalIcon className="w-5 h-5 sm:w-6 sm:h-6" /> // Terminal icon when in Desktop mode
+      )}
+    </button>
+  );
+}
+```
+
+## Easter Eggs
+
+Try clicking the red window control button:
+
+```tsx
+// From Terminal.tsx:479
+<div
+  className="w-2 h-2 bg-red-500 rounded-full cursor-pointer"
+  onClick={() => (window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')}
+/>
+```
+
+<Warning>
+  The red button will redirect you away from the portfolio. You've been warned!
+</Warning>
+
+## Performance
+
+The terminal is dynamically imported for optimal performance:
+
+```tsx
+// From app/page.tsx:9-12
+const Terminalcomp = dynamic(() => import('./components/Terminal/Terminal'), {
+  ssr: false,
+  loading: () => <div className="text-white text-center">Loading Terminal...</div>,
+});
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Desktop Mode" icon="desktop" href="/features/desktop-mode">
+    Switch back to visual interface
+  </Card>
+  
+  <Card title="Command Reference" icon="book" href="/features/terminal-mode#available-commands">
+    See all available commands
+  </Card>
+</CardGroup>

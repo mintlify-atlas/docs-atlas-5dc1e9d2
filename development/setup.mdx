@@ -1,0 +1,306 @@
+---
+title: 'Development Setup'
+description: 'Set up your local development environment for the Pranavbuilds Portfolio project'
+---
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js** (v20 or higher)
+- **npm** or **yarn** package manager
+- **Python** (3.11 or higher) for the backend
+- **uv** package manager for Python dependencies
+- **PostgreSQL** with pgvector extension (for RAG chatbot)
+- **Git** for version control
+
+## Clone Repository
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/yourusername/portfolio.git
+    cd portfolio
+    ```
+  </Step>
+
+  <Step title="Verify project structure">
+    ```bash
+    ls -la
+    # You should see:
+    # - app/          (Next.js application)
+    # - pranav/       (FastAPI backend)
+    # - package.json  (Frontend dependencies)
+    # - railway.json  (Deployment config)
+    ```
+  </Step>
+</Steps>
+
+## Frontend Setup
+
+### Install Dependencies
+
+<CodeGroup>
+```bash npm
+npm install
+```
+
+```bash yarn
+yarn install
+```
+</CodeGroup>
+
+### Available Scripts
+
+The `package.json` includes the following scripts:
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| **dev** | `npm run dev` | Start development server with Turbopack |
+| **build** | `npm run build` | Build production application |
+| **start** | `npm start` | Start production server |
+| **lint** | `npm run lint` | Run ESLint to check code quality |
+| **format** | `npm run format` | Format code with Prettier |
+| **format:check** | `npm run format:check` | Check code formatting |
+| **prepare** | `npm run prepare` | Set up Husky git hooks |
+
+### Start Development Server
+
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:3000`
+
+<Note>
+  The dev server uses **Turbopack** for faster builds and hot module replacement.
+</Note>
+
+## Backend Setup (Pranav AI)
+
+The FastAPI backend is located in the `pranav/` directory and provides RAG-powered chatbot functionality.
+
+<Steps>
+  <Step title="Navigate to backend directory">
+    ```bash
+    cd pranav
+    ```
+  </Step>
+
+  <Step title="Install uv package manager">
+    ```bash
+    # macOS/Linux
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    # Windows
+    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+    ```
+  </Step>
+
+  <Step title="Install Python dependencies">
+    ```bash
+    uv sync
+    ```
+  </Step>
+
+  <Step title="Configure environment variables">
+    Create a `.env` file in the `pranav/` directory (see [Environment Variables](/development/environment-variables))
+  </Step>
+
+  <Step title="Start the backend server">
+    ```bash
+    uv run uvicorn main:app --reload --port 8000
+    ```
+
+    The API will be available at `http://localhost:8000`
+    
+    API documentation: `http://localhost:8000/docs`
+  </Step>
+</Steps>
+
+### Backend Tech Stack
+
+- **Framework**: FastAPI
+- **AI**: Azure OpenAI GPT-4.1
+- **Embeddings**: sentence-transformers (all-MiniLM-L6-v2)
+- **Database**: PostgreSQL with pgvector
+- **Package Manager**: uv
+
+## Running Both Servers
+
+For full functionality, you need to run both the frontend and backend simultaneously:
+
+<CodeGroup>
+```bash Terminal 1 - Frontend
+# In project root
+npm run dev
+```
+
+```bash Terminal 2 - Backend
+# In pranav/ directory
+cd pranav
+uv run uvicorn main:app --reload --port 8000
+```
+</CodeGroup>
+
+<Tip>
+  Use a terminal multiplexer like **tmux** or **screen**, or open two separate terminal windows.
+</Tip>
+
+## Development Tools
+
+### ESLint
+
+The project uses ESLint for code quality and consistency:
+
+```bash
+# Check for linting errors
+npm run lint
+
+# Auto-fix issues
+npm run lint -- --fix
+```
+
+Configuration:
+- `eslint.config.js` - ESLint configuration
+- Uses `eslint-config-next` for Next.js best practices
+
+### Prettier
+
+Automatic code formatting is handled by Prettier:
+
+```bash
+# Format all files
+npm run format
+
+# Check formatting without making changes
+npm run format:check
+```
+
+Configuration:
+- `.prettierrc` or `prettier.config.js` for custom rules
+- Integrated with `lint-staged` for pre-commit formatting
+
+### Husky
+
+Git hooks are managed by Husky to ensure code quality:
+
+```bash
+# Set up Husky (runs automatically after npm install)
+npm run prepare
+```
+
+**Pre-commit Hook**: Automatically runs Prettier on staged files via `lint-staged`
+
+```json
+"lint-staged": {
+  "**/*": "prettier --write --ignore-unknown"
+}
+```
+
+### Commitlint
+
+Commit messages follow conventional commit standards:
+
+- `@commitlint/cli` - Enforces commit message conventions
+- `@commitlint/config-conventional` - Standard ruleset
+
+Example commit messages:
+```bash
+feat: add new terminal command
+fix: resolve window resize issue
+docs: update setup instructions
+style: format Terminal.tsx
+```
+
+## Verify Installation
+
+<Steps>
+  <Step title="Check frontend">
+    ```bash
+    npm run dev
+    # Visit http://localhost:3000
+    ```
+  </Step>
+
+  <Step title="Check backend">
+    ```bash
+    cd pranav
+    uv run uvicorn main:app --reload --port 8000
+    # Visit http://localhost:8000/health
+    ```
+
+    Expected response:
+    ```json
+    {"status": "healthy"}
+    ```
+  </Step>
+
+  <Step title="Check linting and formatting">
+    ```bash
+    npm run lint
+    npm run format:check
+    ```
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Port already in use">
+    If port 3000 or 8000 is already in use:
+
+    ```bash
+    # Frontend - use different port
+    npm run dev -- -p 3001
+
+    # Backend - use different port
+    uv run uvicorn main:app --reload --port 8001
+    ```
+  </Accordion>
+
+  <Accordion title="Module not found errors">
+    Delete node_modules and reinstall:
+
+    ```bash
+    rm -rf node_modules package-lock.json
+    npm install
+    ```
+  </Accordion>
+
+  <Accordion title="Python dependency issues">
+    Reset the uv environment:
+
+    ```bash
+    cd pranav
+    rm -rf .venv uv.lock
+    uv sync
+    ```
+  </Accordion>
+
+  <Accordion title="Husky hooks not working">
+    Reinstall Husky:
+
+    ```bash
+    rm -rf .husky
+    npm run prepare
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="gear" href="/development/environment-variables">
+    Configure environment variables for both frontend and backend
+  </Card>
+  <Card title="Deployment" icon="rocket" href="/development/deployment">
+    Learn how to deploy your application to production
+  </Card>
+  <Card title="Terminal Commands" icon="terminal" href="/terminal/commands">
+    Explore available terminal commands in the portfolio
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/api/architecture">
+    Understand the project architecture
+  </Card>
+</CardGroup>

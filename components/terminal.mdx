@@ -1,0 +1,273 @@
+---
+title: Terminal Component
+description: Interactive terminal emulator with file system navigation and custom commands
+---
+
+The Terminal component provides a fully interactive command-line interface with a simulated file system, command history, and auto-completion.
+
+## Overview
+
+The terminal emulator supports Unix-like commands and includes a virtual file system containing portfolio information, projects, experience, and skills data.
+
+## Component Structure
+
+### Main Component
+
+```typescript
+import Terminalcomp from '@/components/Terminal/Terminal';
+
+<Terminalcomp />
+```
+
+## File System Structure
+
+The terminal includes a pre-configured file system:
+
+```
+~
+├── about.txt
+├── skills.txt
+├── contact.txt
+├── projects/
+│   ├── teamfinder.txt
+│   ├── spotify-bot.txt
+│   ├── quizapp.txt
+│   └── electrade.txt
+└── experience/
+    ├── gradguide-internship.txt
+    └── summary.txt
+```
+
+## Supported Commands
+
+### File System Navigation
+
+<ParamField path="ls" type="command">
+  List directory contents. Directories are shown in blue, files in white.
+  
+  ```bash
+  $ ls
+  about.txt  projects/  experience/  skills.txt  contact.txt
+  ```
+</ParamField>
+
+<ParamField path="cd" type="command">
+  Change directory. Supports relative paths, absolute paths, and parent directory navigation.
+  
+  ```bash
+  $ cd projects
+  $ cd ..
+  $ cd ~/experience
+  ```
+</ParamField>
+
+<ParamField path="pwd" type="command">
+  Print working directory.
+  
+  ```bash
+  $ pwd
+  ~/projects
+  ```
+</ParamField>
+
+<ParamField path="cat" type="command">
+  Display file contents.
+  
+  ```bash
+  $ cat about.txt
+  I am Pranav, currently pursuing B.E in computer science from chandigarh university.
+  ```
+</ParamField>
+
+### File Management
+
+<ParamField path="mkdir" type="command">
+  Create a new directory.
+  
+  ```bash
+  $ mkdir new-folder
+  ```
+</ParamField>
+
+<ParamField path="touch" type="command">
+  Create a new empty file.
+  
+  ```bash
+  $ touch newfile.txt
+  ```
+</ParamField>
+
+<ParamField path="rm" type="command">
+  Remove a file (not directories).
+  
+  ```bash
+  $ rm oldfile.txt
+  ```
+</ParamField>
+
+### Information Commands
+
+<ParamField path="help" type="command">
+  Display all available commands with descriptions.
+</ParamField>
+
+<ParamField path="whoami" type="command">
+  Display current user name.
+  
+  ```bash
+  $ whoami
+  guest
+  ```
+</ParamField>
+
+<ParamField path="date" type="command">
+  Display current date and time.
+</ParamField>
+
+<ParamField path="uname" type="command">
+  Display system information. Supports flags: `-a`, `-s`, `-r`.
+  
+  ```bash
+  $ uname -a
+  Linux portfolio 5.4.0-42-generic #46-Ubuntu SMP
+  ```
+</ParamField>
+
+<ParamField path="experience" type="command">
+  Display professional experience in formatted output.
+</ParamField>
+
+<ParamField path="history" type="command">
+  Show command history.
+</ParamField>
+
+### Utility Commands
+
+<ParamField path="clear" type="command">
+  Clear the terminal screen.
+</ParamField>
+
+<ParamField path="echo" type="command">
+  Print text to terminal.
+  
+  ```bash
+  $ echo Hello World
+  Hello World
+  ```
+</ParamField>
+
+<ParamField path="github" type="command">
+  Open GitHub profile in new tab.
+</ParamField>
+
+### Math Expressions
+
+The terminal can evaluate basic math expressions:
+
+```bash
+$ 5+3
+8
+$ 10*2
+20
+```
+
+## Component State
+
+### State Management
+
+```typescript
+const [input, setInput] = useState('');
+const [commands, setCommands] = useState([]);
+const [commandHistory, setCommandHistory] = useState([]);
+const [historyIndex, setHistoryIndex] = useState(-1);
+const [currentDirectory, setCurrentDirectory] = useState('~');
+const [fileSystem, setFileSystem] = useState({...});
+const [userName, setUserName] = useState('');
+const [isAskingName, setIsAskingName] = useState(false);
+```
+
+## Features
+
+### Auto-completion
+
+Press `Tab` to auto-complete file and directory names based on current context.
+
+### Command History
+
+- Press `↑` to navigate to previous commands
+- Press `↓` to navigate to next commands
+- History persists during session
+
+### User Name Prompt
+
+On first visit (per session), the terminal prompts for a user name:
+
+```bash
+Please enter your name to continue:
+> John
+Welcome John! Type 'help' to see available commands.
+```
+
+### Session Storage
+
+The terminal uses `sessionStorage` to track if user has visited before:
+
+```typescript
+const hasVisited = sessionStorage.getItem('hasVisited');
+if (!hasVisited) {
+  setIsAskingName(true);
+  sessionStorage.setItem('hasVisited', 'true');
+}
+```
+
+## Styling
+
+The terminal features:
+- macOS-style window controls (red, yellow, green buttons)
+- Monospace font for authentic terminal feel
+- Custom scrollbar styling
+- Responsive design for mobile and desktop
+- Terminal glow effect
+- Green command prompt with blue directory highlighting
+
+## Example Usage
+
+```typescript
+import Terminalcomp from '@/components/Terminal/Terminal';
+
+function App() {
+  return (
+    <div className="w-full h-screen">
+      <Terminalcomp />
+    </div>
+  );
+}
+```
+
+## Terminal Clock
+
+Displays last login time with auto-updating clock:
+
+```typescript
+const TerminalClock = () => {
+  const [time, setTime] = useState(getFormattedTime());
+  useEffect(() => {
+    const timer = setInterval(() => setTime(getFormattedTime()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  return <div className="text-xs mb-2 sm:mb-4 opacity-70">Last login: {time}</div>;
+};
+```
+
+## Prompt Format
+
+```bash
+username@portfolio:directory$ command
+```
+
+Example:
+```bash
+guest@portfolio:~$ cd projects
+guest@portfolio:~/projects$ ls
+teamfinder.txt  spotify-bot.txt  quizapp.txt  electrade.txt
+```

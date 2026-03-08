@@ -1,0 +1,191 @@
+---
+title: 'Features Overview'
+description: 'Comprehensive overview of all features in Pranavbuilds Portfolio'
+icon: 'grid-2-plus'
+---
+
+# Features Overview
+
+Pranavbuilds Portfolio is a unique dual-mode portfolio application that combines the aesthetics of a desktop operating system with the power of a command-line interface.
+
+## Core Features
+
+<CardGroup cols={2}>
+  <Card title="Desktop Mode" icon="desktop" href="/features/desktop-mode">
+    Interactive desktop environment with draggable icons, floating dock, and window management
+  </Card>
+  
+  <Card title="Terminal Mode" icon="terminal" href="/features/terminal-mode">
+    Full-featured CLI with command history, autocomplete, and filesystem navigation
+  </Card>
+  
+  <Card title="Window System" icon="window-maximize" href="/features/window-system">
+    Draggable, resizable windows with minimize, maximize, and close controls
+  </Card>
+  
+  <Card title="Wallpaper Customization" icon="image" href="/features/wallpaper-customization">
+    Custom wallpaper upload and preset wallpaper selection system
+  </Card>
+</CardGroup>
+
+## Feature Comparison
+
+| Feature | Desktop Mode | Terminal Mode |
+|---------|--------------|---------------|
+| **Navigation** | Click/Double-click icons | Type commands |
+| **Projects** | Visual cards with images | Text-based listings |
+| **Experience** | Timeline view with animations | Structured text output |
+| **Skills** | Categorized cards | List format |
+| **Interaction** | Mouse/Touch | Keyboard |
+| **Accessibility** | Visual, Mobile-friendly | Keyboard-only navigation |
+
+## Mode Switching
+
+Seamlessly toggle between Desktop and Terminal modes using the floating toggle button:
+
+```tsx
+// Toggle button located at bottom-right
+<ToggleButton 
+  isCLI={isCLI} 
+  onToggle={() => setIsCLI(!isCLI)} 
+/>
+```
+
+<Info>
+  The toggle button shows a Monitor icon when in Terminal mode and a Terminal icon when in Desktop mode, making it intuitive to switch.
+</Info>
+
+## Desktop Features
+
+### Interactive Icons
+- **About Me** - Personal information and bio
+- **Resume** - PDF viewer for resume
+- **Projects** - Project showcase with live demos
+- **Skills** - Technical skills categorized
+- **Experience** - Professional experience timeline
+- **Books** - Reading list and recommendations
+- **Browser** - Embedded web browser
+- **Settings** - Wallpaper and theme customization
+- **My Spotify** - Spotify integration with playlists
+- **Pranav AI** - Interactive AI chatbot
+
+### Floating Dock
+MacOS-style animated dock with:
+- Home navigation
+- Settings access
+- Games launcher
+- Social media links (Twitter, GitHub)
+- Smooth hover animations with icon scaling
+
+## Terminal Features
+
+### File System Navigation
+```bash
+# Navigate directories
+cd projects
+ls
+pwd
+
+# Read files
+cat about.txt
+cat skills.txt
+```
+
+### Built-in Commands
+- `ls` - List directory contents
+- `cd` - Change directory
+- `cat` - Display file contents
+- `mkdir` - Create directory
+- `touch` - Create file
+- `rm` - Remove file
+- `experience` - Show professional experience
+- `history` - View command history
+- `clear` - Clear terminal
+- `github` - Open GitHub profile
+
+### Advanced Features
+- **Command History** - Navigate with ↑/↓ arrow keys
+- **Tab Completion** - Auto-complete file/directory names
+- **Math Evaluation** - Calculate expressions directly
+- **Custom Filesystem** - Pre-populated with portfolio data
+
+## Window Management
+
+All desktop windows support:
+- **Drag** - Click and drag title bar to move
+- **Resize** - Drag edges/corners to resize
+- **Maximize** - Full-screen mode
+- **Minimize** - Hide window
+- **Close** - Exit window
+
+<Note>
+  Windows automatically adapt to mobile devices with full-screen mode for better UX.
+</Note>
+
+## Responsive Design
+
+The portfolio adapts to three device types:
+
+| Device Type | Breakpoint | Layout |
+|-------------|------------|--------|
+| **Mobile** | < 640px | Vertical icon layout, full-screen windows |
+| **Tablet** | 640px - 1024px | Flexible grid layout |
+| **Desktop** | > 1024px | Multi-column icon layout, resizable windows |
+
+## Performance Optimizations
+
+### Code Splitting
+```tsx
+// Dynamic imports for better performance
+const AboutWindow = dynamic(() => import('../windows/AboutWindow'), {
+  ssr: false,
+  loading: () => <WindowLoadingSkeleton />,
+});
+```
+
+### Prefetching
+Icons prefetch their windows on hover:
+```tsx
+onMouseEnter={() => handlePrefetch(icon.name)}
+```
+
+### Lazy Loading
+- Terminal loads dynamically when mode is activated
+- Window components load only when opened
+- Images use lazy loading with proper sizing
+
+## Animation System
+
+Built with Framer Motion for smooth, performant animations:
+- Spring animations for natural feel
+- Staggered animations for lists
+- Gesture-based interactions
+- Exit animations on close
+
+## Accessibility Features
+
+- **Keyboard Navigation** - Full keyboard support in both modes
+- **Focus Indicators** - Clear focus rings on interactive elements
+- **ARIA Labels** - Proper labeling for screen readers
+- **Touch Targets** - Minimum 44x44px touch areas on mobile
+- **Alternative Text** - Images include descriptive alt text
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Desktop Mode Guide" icon="desktop" href="/features/desktop-mode">
+    Learn how to use the desktop interface
+  </Card>
+  
+  <Card title="Terminal Commands" icon="terminal" href="/features/terminal-mode">
+    Master the CLI interface
+  </Card>
+  
+  <Card title="Window System" icon="window-maximize" href="/features/window-system">
+    Understand window management
+  </Card>
+  
+  <Card title="Customization" icon="palette" href="/features/wallpaper-customization">
+    Customize your experience
+  </Card>
+</CardGroup>

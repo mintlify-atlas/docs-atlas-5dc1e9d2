@@ -1,0 +1,449 @@
+---
+title: 'Firebase Integration'
+description: 'Firebase and Firestore setup for real-time database functionality'
+---
+
+## Overview
+
+The portfolio uses Firebase for backend services, specifically Firestore for real-time database operations. Firebase is initialized with environment variables and provides a singleton database instance.
+
+## Setup
+
+**Location:** `lib/firebase.ts`
+
+The Firebase configuration is minimal and follows best practices for Next.js applications.
+
+### Firebase Configuration
+
+**Location:** `lib/firebase.ts:4`
+
+```typescript
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+};
+```
+
+### Firebase Initialization
+
+**Location:** `lib/firebase.ts:14`
+
+```typescript
+import { initializeApp, getApps } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+
+// Initialize Firebase
+const app = getApps().length === 0 
+  ? initializeApp(firebaseConfig) 
+  : getApps()[0];
+
+const db = getFirestore(app);
+
+export { db };
+```
+
+This initialization pattern ensures Firebase is only initialized once, even with Next.js hot module replacement during development.
+
+## Environment Variables
+
+Add these to your `.env.local` file:
+
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
+
+### Why NEXT_PUBLIC Prefix?
+
+All Firebase environment variables use the `NEXT_PUBLIC_` prefix because they need to be accessible in the browser for client-side Firebase operations. Next.js only exposes environment variables with this prefix to the client bundle.
+
+## Getting Firebase Credentials
+
+1. **Create a Firebase Project:**
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Click "Add project" or select an existing project
+
+2. **Register Your Web App:**
+   - In Project Settings, scroll to "Your apps"
+   - Click the Web icon (`</>`)
+   - Register your app with a nickname
+
+3. **Copy Configuration:**
+   - Firebase will display your `firebaseConfig` object
+   - Copy each value to your `.env.local` file
+
+4. **Enable Firestore:**
+   - In the Firebase Console, go to "Firestore Database"
+   - Click "Create database"
+   - Choose production or test mode
+
+## Required Packages
+
+**Location:** `package.json:18-19,25`
+
+```json
+{
+  "dependencies": {
+    "@firebase/app": "^0.10.18",
+    "@firebase/firestore": "^4.7.6",
+    "firebase": "^11.2.0"
+  }
+}
+```
+
+### Installation
+
+```bash
+npm install firebase @firebase/app @firebase/firestore
+```
+
+Or with yarn:
+
+```bash
+yarn add firebase @firebase/app @firebase/firestore
+```
+
+## Usage in Components
+
+Import the database instance in any component:
+
+```typescript
+import { db } from '@/lib/firebase';
+import { 
+  collection, 
+  doc, 
+  getDocs, 
+  getDoc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc 
+} from 'firebase/firestore';
+```
+
+### Read Data
+
+<CodeGroup>
+```typescript Get All Documents
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+async function fetchData() {
+  const querySnapshot = await getDocs(collection(db, 'collectionName'));
+  const data = querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+  return data;
+}
+```
+
+```typescript Get Single Document
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+async function fetchDocument(id: string) {
+  const docRef = doc(db, 'collectionName', id);
+  const docSnap = await getDoc(docRef);
+  
+  if (docSnap.exists()) {
+    return { id: docSnap.id, ...docSnap.data() };
+  } else {
+    return null;
+  }
+}
+```
+</CodeGroup>
+
+### Write Data
+
+<CodeGroup>
+```typescript Add Document
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+async function addData(data: any) {
+  try {
+    const docRef = await addDoc(collection(db, 'collectionName'), data);
+    console.log('Document written with ID: ', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding document: ', error);
+  }
+}
+```
+
+```typescript Update Document
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+async function updateData(id: string, updates: any) {
+  const docRef = doc(db, 'collectionName', id);
+  try {
+    await updateDoc(docRef, updates);
+    console.log('Document updated');
+  } catch (error) {
+    console.error('Error updating document: ', error);
+  }
+}
+```
+
+```typescript Delete Document
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+async function deleteData(id: string) {
+  try {
+    await deleteDoc(doc(db, 'collectionName', id));
+    console.log('Document deleted');
+  } catch (error) {
+    console.error('Error deleting document: ', error);
+  }
+}
+```
+</CodeGroup>
+
+### Real-time Updates
+
+```typescript
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useEffect, useState } from 'react';
+
+function useRealtimeData() {
+  const [data, setData] = useState<any[]>([]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, 'collectionName'),
+      (snapshot) => {
+        const items = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setData(items);
+      },
+      (error) => {
+        console.error('Error fetching real-time data:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  return data;
+}
+```
+
+## Firestore Security Rules
+
+Ensure you set up proper security rules in the Firebase Console:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to all
+    match /{document=**} {
+      allow read: if true;
+    }
+    
+    // Restrict write access
+    match /{document=**} {
+      allow write: if request.auth != null;
+    }
+  }
+}
+```
+
+Adjust these rules based on your security requirements.
+
+## Firestore Queries
+
+### Query with Filters
+
+```typescript
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+async function queryData() {
+  const q = query(
+    collection(db, 'collectionName'),
+    where('status', '==', 'active')
+  );
+  
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+}
+```
+
+### Query with Ordering and Limits
+
+```typescript
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+async function getLatestItems(count: number = 10) {
+  const q = query(
+    collection(db, 'collectionName'),
+    orderBy('createdAt', 'desc'),
+    limit(count)
+  );
+  
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+}
+```
+
+## Error Handling
+
+Always wrap Firestore operations in try-catch blocks:
+
+```typescript
+import { db } from '@/lib/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+
+async function safelyFetchData() {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'collectionName'));
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error fetching data from Firestore:', error);
+    // Handle error appropriately
+    // - Show user-friendly message
+    // - Return empty array or default value
+    // - Report to error tracking service
+    return [];
+  }
+}
+```
+
+## TypeScript Types
+
+Define types for your Firestore documents:
+
+```typescript
+// types/firestore.ts
+export interface FirestoreDocument {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserProfile extends FirestoreDocument {
+  name: string;
+  email: string;
+  avatar?: string;
+}
+
+export interface BlogPost extends FirestoreDocument {
+  title: string;
+  content: string;
+  author: string;
+  published: boolean;
+}
+```
+
+Use these types in your queries:
+
+```typescript
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { BlogPost } from '@/types/firestore';
+
+async function getBlogPosts(): Promise<BlogPost[]> {
+  const querySnapshot = await getDocs(collection(db, 'blogPosts'));
+  return querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  })) as BlogPost[];
+}
+```
+
+## Best Practices
+
+1. **Singleton Pattern:** The Firebase app is initialized only once using `getApps().length === 0` check
+
+2. **Environment Variables:** All config values come from environment variables, never hardcode credentials
+
+3. **Client-Side Only:** Firebase operations happen on the client side with `NEXT_PUBLIC_` prefixed variables
+
+4. **Error Handling:** Always wrap async Firestore operations in try-catch blocks
+
+5. **Security Rules:** Set up proper Firestore security rules in the Firebase Console
+
+6. **Cleanup Listeners:** Always unsubscribe from real-time listeners when components unmount
+
+7. **Type Safety:** Use TypeScript interfaces for Firestore documents
+
+## Common Patterns
+
+### Custom Hook for Firestore Collection
+
+```typescript
+import { useEffect, useState } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+export function useFirestoreCollection<T>(collectionName: string) {
+  const [data, setData] = useState<T[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, collectionName));
+        const items = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as T[];
+        setData(items);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [collectionName]);
+
+  return { data, loading, error };
+}
+```
+
+Usage:
+
+```typescript
+function MyComponent() {
+  const { data, loading, error } = useFirestoreCollection<BlogPost>('blogPosts');
+  
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  
+  return (
+    <div>
+      {data.map(post => (
+        <div key={post.id}>{post.title}</div>
+      ))}
+    </div>
+  );
+}
+```

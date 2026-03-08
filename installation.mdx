@@ -1,0 +1,440 @@
+---
+title: Installation Guide
+description: Complete installation and configuration guide for the Pranavbuilds Portfolio
+---
+
+# Installation Guide
+
+This guide covers the complete installation process, including environment setup, optional integrations, and troubleshooting.
+
+## Prerequisites
+
+Before installing the portfolio, ensure your system meets these requirements:
+
+### Required Software
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js">
+    **Version**: 20.x or higher  
+    **Download**: [nodejs.org](https://nodejs.org)
+  </Card>
+  
+  <Card title="Git" icon="git">
+    **Version**: Any recent version  
+    **Download**: [git-scm.com](https://git-scm.com)
+  </Card>
+  
+  <Card title="Package Manager" icon="box">
+    **Options**: npm (included with Node.js), yarn, or pnpm  
+    Choose one based on your preference
+  </Card>
+  
+  <Card title="Code Editor" icon="code">
+    **Recommended**: VS Code, WebStorm, or any editor  
+    Optional but helpful for customization
+  </Card>
+</CardGroup>
+
+### System Requirements
+
+- **OS**: Windows 10+, macOS 10.15+, or Linux
+- **RAM**: 4GB minimum (8GB recommended)
+- **Disk Space**: ~500MB for dependencies
+- **Browser**: Modern browser (Chrome, Firefox, Safari, Edge)
+
+### Check Your Installation
+
+Verify that Node.js and npm are installed:
+
+```bash Verify Prerequisites
+# Check Node.js version (should be 20.x or higher)
+node --version
+# Output: v20.x.x
+
+# Check npm version
+npm --version
+# Output: 10.x.x
+
+# Check Git version
+git --version
+# Output: git version 2.x.x
+```
+
+<Note>
+  The portfolio requires Node.js 20 or higher for compatibility with Next.js 15 and React 19.
+</Note>
+
+## Installation Steps
+
+<Steps>
+  <Step title="Clone the Repository">
+    Start by cloning the repository from GitHub:
+    
+    ```bash
+    git clone https://github.com/pranav322/portfolio-v3.git
+    cd portfolio-v3
+    ```
+    
+    **Alternative**: Download as ZIP from GitHub and extract it:
+    
+    ```bash
+    # If you downloaded as ZIP
+    unzip portfolio-v3-main.zip
+    cd portfolio-v3-main
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install all required packages using your preferred package manager:
+    
+    <CodeGroup>
+    ```bash npm
+    npm install
+    ```
+    
+    ```bash yarn
+    yarn install
+    ```
+    
+    ```bash pnpm
+    pnpm install
+    ```
+    </CodeGroup>
+    
+    This installs the following key dependencies:
+    
+    **Core Framework**:
+    - `next@^15.2.8` - Next.js framework
+    - `react@^19.0.0` - React library
+    - `react-dom@^19.0.0` - React DOM rendering
+    - `typescript@^5` - TypeScript compiler
+    
+    **UI & Animation**:
+    - `framer-motion@^12.33.0` - Animation library
+    - `tailwindcss@^3.4.1` - Utility-first CSS
+    - `re-resizable@^6.10.3` - Resizable components
+    - `@tabler/icons-react@^3.29.0` - Icon system
+    - `lucide-react@^0.473.0` - Additional icons
+    
+    **Features**:
+    - `firebase@^11.2.0` - Backend services
+    - `@react-pdf-viewer/core@^3.12.0` - PDF viewing
+    - `react-chartjs-2@^5.3.0` - Data visualization
+  </Step>
+
+  <Step title="Environment Variables Setup">
+    The portfolio uses environment variables for optional integrations. Create a `.env.local` file in the root directory:
+    
+    ```bash
+    touch .env.local
+    ```
+    
+    Add the following variables (all are optional for basic functionality):
+    
+    ```bash .env.local
+    # Spotify Integration (Optional)
+    SPOTIFY_CLIENT_ID=your_spotify_client_id
+    SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+    SPOTIFY_REFRESH_TOKEN=your_refresh_token
+    
+    # Firebase Configuration (Optional)
+    NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+    NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+    ```
+    
+    <Warning>
+      The portfolio will work without these environment variables, but some features (like Spotify integration) will be limited.
+    </Warning>
+  </Step>
+
+  <Step title="Configure Spotify Integration (Optional)">
+    To enable real-time Spotify statistics:
+    
+    1. **Create a Spotify App**:
+       - Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+       - Click "Create App"
+       - Set redirect URI to `http://localhost:3000/api/spotify/callback`
+    
+    2. **Get Credentials**:
+       - Copy the **Client ID** and **Client Secret**
+       - Add them to your `.env.local` file
+    
+    3. **Generate Refresh Token**:
+       - Run the development server
+       - Navigate to `/spotify-auth`
+       - Authorize the app
+       - Copy the refresh token and add to `.env.local`
+    
+    ```typescript Spotify Scopes
+    // The app requests these Spotify scopes:
+    - user-read-recently-played  // Recently played tracks
+    - user-top-read              // Top tracks and artists
+    - user-read-currently-playing // Now playing
+    - user-read-playback-state   // Playback state
+    ```
+  </Step>
+
+  <Step title="Start Development Server">
+    Launch the development server:
+    
+    <CodeGroup>
+    ```bash npm
+    npm run dev
+    ```
+    
+    ```bash yarn
+    yarn dev
+    ```
+    
+    ```bash pnpm
+    pnpm dev
+    ```
+    </CodeGroup>
+    
+    The server will start with Turbopack enabled for faster development:
+    
+    ```bash Output
+    ▲ Next.js 15.2.8
+    - Local:        http://localhost:3000
+    - Turbopack:    enabled
+    
+    ○ Compiling / ...
+    ✓ Compiled / in 1.2s
+    ```
+  </Step>
+
+  <Step title="Verify Installation">
+    Open your browser and visit `http://localhost:3000`
+    
+    You should see:
+    - Desktop interface with dot grid background
+    - Floating dock at the bottom
+    - Desktop icons in top-left
+    - Toggle button in center
+    - Quote in the upper area
+    
+    Try clicking on an icon to open a window and verify the window system works.
+  </Step>
+</Steps>
+
+## Build for Production
+
+To create an optimized production build:
+
+<CodeGroup>
+```bash npm
+# Build the application
+npm run build
+
+# Start production server
+npm run start
+```
+
+```bash yarn
+# Build the application
+yarn build
+
+# Start production server
+yarn start
+```
+
+```bash pnpm
+# Build the application
+pnpm build
+
+# Start production server
+pnpm start
+```
+</CodeGroup>
+
+The build process will:
+
+1. **Compile TypeScript** to JavaScript
+2. **Optimize Assets** (images, fonts, etc.)
+3. **Bundle Code** with tree-shaking
+4. **Generate Static Pages** where possible
+5. **Create Production Build** in `.next` directory
+
+```bash Build Output
+○ Compiling / ...
+✓ Compiled successfully
+✓ Linting and checking validity of types
+✓ Collecting page data
+✓ Generating static pages (5/5)
+✓ Collecting build traces
+✓ Finalizing page optimization
+
+Route (app)              Size     First Load JS
+┌ ○ /                    5.2 kB          95 kB
+└ ○ /spotify-auth        1.8 kB          91 kB
+```
+
+## Configuration Files
+
+Key configuration files in the project:
+
+### Next.js Configuration
+
+```typescript next.config.ts
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  images: {
+    domains: ['assets.aceternity.com'],
+  },
+  webpack: config => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvas: false,
+    };
+    return config;
+  },
+};
+
+export default nextConfig;
+```
+
+### TypeScript Configuration
+
+The project uses strict TypeScript settings defined in `tsconfig.json` for type safety.
+
+### TailwindCSS Configuration
+
+Custom theme configuration in `tailwind.config.ts` includes:
+- Custom color schemes
+- Animation utilities
+- Responsive breakpoints
+- Plugin extensions
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Port 3000 already in use">
+    **Problem**: Another application is using port 3000.
+    
+    **Solution**: Either stop the other application or use a different port:
+    
+    ```bash
+    # Use a different port
+    PORT=3001 npm run dev
+    ```
+  </Accordion>
+
+  <Accordion title="Module not found errors">
+    **Problem**: Dependencies not properly installed.
+    
+    **Solution**: Clean install dependencies:
+    
+    ```bash
+    # Remove existing installations
+    rm -rf node_modules package-lock.json
+    
+    # Reinstall
+    npm install
+    ```
+  </Accordion>
+
+  <Accordion title="Build fails with TypeScript errors">
+    **Problem**: Type errors in the codebase.
+    
+    **Solution**: The project is configured to ignore build errors in `next.config.ts`. If you want to fix them:
+    
+    ```bash
+    # Check TypeScript errors
+    npx tsc --noEmit
+    ```
+  </Accordion>
+
+  <Accordion title="Spotify integration not working">
+    **Problem**: Spotify features showing errors or no data.
+    
+    **Solution**: 
+    1. Verify environment variables are set correctly
+    2. Check that redirect URI matches in Spotify dashboard
+    3. Ensure refresh token is valid
+    4. Check browser console for API errors
+    
+    The portfolio will still function without Spotify integration.
+  </Accordion>
+
+  <Accordion title="Windows not draggable on mobile">
+    **Problem**: Windows are fullscreen on mobile and can't be dragged.
+    
+    **Solution**: This is intentional behavior. On mobile devices (< 768px width), windows automatically go fullscreen for better UX. This is defined in `WindowWrapper.tsx:40-51`.
+  </Accordion>
+
+  <Accordion title="PDF viewer not loading">
+    **Problem**: PDF files not displaying in the Books window.
+    
+    **Solution**: 
+    1. Ensure PDF files exist in `public/books/` directory
+    2. Check browser console for CORS errors
+    3. Verify `@react-pdf-viewer` packages are installed
+    4. Try clearing browser cache
+  </Accordion>
+
+  <Accordion title="Slow performance or high memory usage">
+    **Problem**: Application runs slowly or uses too much memory.
+    
+    **Solution**:
+    1. Close unused windows in desktop mode
+    2. Use production build instead of development
+    3. Disable browser extensions that might interfere
+    4. Clear browser cache and reload
+    5. Ensure you meet minimum system requirements
+  </Accordion>
+</AccordionGroup>
+
+## Additional Scripts
+
+Other useful npm scripts defined in `package.json`:
+
+```bash Available Scripts
+# Run linting
+npm run lint
+
+# Format code with Prettier
+npm run format
+
+# Check formatting
+npm run format:check
+
+# Prepare Husky git hooks
+npm run prepare
+```
+
+## Development Tools
+
+The project includes:
+
+- **ESLint**: Code linting with Next.js config
+- **Prettier**: Code formatting with custom rules
+- **Husky**: Git hooks for pre-commit checks
+- **lint-staged**: Run linters on staged files
+- **commitlint**: Conventional commit message enforcement
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Jump into using the portfolio with common commands and interactions
+  </Card>
+  
+  <Card title="Development Guide" icon="code" href="/development/setup">
+    Learn how to customize and extend the portfolio with your own content
+  </Card>
+</CardGroup>
+
+<Note>
+  For deployment instructions, see the [Development Guide](/development/setup) which covers deploying to Vercel, Netlify, and other platforms.
+</Note>

@@ -1,0 +1,684 @@
+---
+title: 'Terminal Customization'
+description: 'Customize the terminal, add new commands, and modify the file system'
+---
+
+## Overview
+
+The terminal component (`Terminal.tsx`) is highly customizable. You can add new commands, modify the file system structure, change styling, and extend functionality to match your portfolio needs.
+
+## Adding New Commands
+
+### Basic Command Structure
+
+Commands are handled in the `processCommand` function within `Terminal.tsx`. Add new cases to the switch statement:
+
+```typescript Terminal.tsx:184-441
+switch (command) {
+  case 'your-command':
+    // Command logic here
+    output = 'Your output';
+    break;
+  // ... other cases
+}
+```
+
+### Simple Text Output Command
+
+Add a command that displays static text:
+
+<Steps>
+  <Step title="Add command case">
+    ```typescript Terminal.tsx
+    case 'projects':
+      output = (
+        <div>
+          <div className="text-yellow-400 mb-2">MY PROJECTS</div>
+          <div>• TeamFinder - Team collaboration platform</div>
+          <div>• Spotify Bot - Telegram integration</div>
+          <div>• QuizApp - Interactive quiz application</div>
+          <div>• Electrade - Electronics trading platform</div>
+        </div>
+      );
+      break;
+    ```
+  </Step>
+
+  <Step title="Add to help command">
+    Update the help command to include your new command:
+
+    ```typescript Terminal.tsx:397-418
+    case 'help':
+      output = (
+        <div className="space-y-1">
+          <div className="text-yellow-400">Available commands:</div>
+          {/* ... existing commands ... */}
+          <div>projects - display all projects</div> {/* Add this line */}
+        </div>
+      );
+      break;
+    ```
+  </Step>
+
+  <Step title="Test the command">
+    ```bash
+    guest@portfolio:~$ projects
+    MY PROJECTS
+    • TeamFinder - Team collaboration platform
+    • Spotify Bot - Telegram integration
+    • QuizApp - Interactive quiz application
+    • Electrade - Electronics trading platform
+    ```
+  </Step>
+</Steps>
+
+### Command with Arguments
+
+Create a command that accepts and processes arguments:
+
+```typescript Terminal.tsx
+case 'greet':
+  if (args.length === 0) {
+    output = 'Usage: greet [name]';
+  } else {
+    const name = args.join(' ');
+    output = `Hello, ${name}! Welcome to my portfolio!`;
+  }
+  break;
+```
+
+**Usage**:
+```bash
+guest@portfolio:~$ greet
+Usage: greet [name]
+
+guest@portfolio:~$ greet John Doe
+Hello, John Doe! Welcome to my portfolio!
+```
+
+### Command with External Action
+
+Create a command that opens URLs or performs actions:
+
+```typescript Terminal.tsx:420-423
+case 'linkedin':
+  window.open('https://linkedin.com/in/yourprofile', '_blank');
+  output = 'Opening LinkedIn profile...';
+  break;
+
+case 'resume':
+  window.open('/path/to/resume.pdf', '_blank');
+  output = 'Opening resume...';
+  break;
+```
+
+### Interactive Command with API Call
+
+Create a command that fetches data from an API:
+
+```typescript Terminal.tsx
+case 'weather':
+  if (args.length === 0) {
+    output = 'Usage: weather [city]';
+  } else {
+    const city = args.join(' ');
+    output = 'Fetching weather...';
+    
+    // Async operation
+    (async () => {
+      try {
+        const response = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=YOUR_API_KEY`
+        );
+        const data = await response.json();
+        
+        // Update output with weather data
+        setCommands(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1].output = (
+            <div>
+              <div>Weather in {data.name}:</div>
+              <div>Temperature: {(data.main.temp - 273.15).toFixed(1)}°C</div>
+              <div>Conditions: {data.weather[0].description}</div>
+            </div>
+          );
+          return updated;
+        });
+      } catch (error) {
+        setCommands(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1].output = 'Error fetching weather data';
+          return updated;
+        });
+      }
+    })();
+  }
+  break;
+```
+
+### Command with Styled Output
+
+Create visually rich command outputs with React components:
+
+```typescript Terminal.tsx
+case 'skills':
+  output = (
+    <div className="space-y-2">
+      <div className="text-cyan-400 font-bold">TECHNICAL SKILLS</div>
+      
+      <div className="border-l-2 border-blue-400 pl-3">
+        <div className="text-blue-400 font-semibold">Frontend</div>
+        <div className="text-gray-300">React, Next.js, TypeScript, Tailwind CSS</div>
+      </div>
+      
+      <div className="border-l-2 border-green-400 pl-3">
+        <div className="text-green-400 font-semibold">Backend</div>
+        <div className="text-gray-300">Node.js, Express, FastAPI, Python</div>
+      </div>
+      
+      <div className="border-l-2 border-yellow-400 pl-3">
+        <div className="text-yellow-400 font-semibold">Database</div>
+        <div className="text-gray-300">PostgreSQL, MongoDB, Redis</div>
+      </div>
+    </div>
+  );
+  break;
+```
+
+## Modifying the File System
+
+### Adding New Files
+
+Add files to existing directories in the initial state:
+
+```typescript Terminal.tsx:21-64
+const [fileSystem, setFileSystem] = useState({
+  '~': {
+    type: 'directory',
+    contents: {
+      'about.txt': { type: 'file', content: '...' },
+      
+      // Add a new file
+      'education.txt': {
+        type: 'file',
+        content: 'B.E. Computer Science\nChandigarh University\n2022-2026'
+      },
+      
+      projects: {
+        type: 'directory',
+        contents: {
+          // ... existing files
+        }
+      }
+    }
+  }
+});
+```
+
+### Adding New Directories
+
+Create new directories with files:
+
+```typescript Terminal.tsx:21-64
+'certifications': {
+  type: 'directory',
+  contents: {
+    'aws.txt': {
+      type: 'file',
+      content: 'AWS Certified Solutions Architect\nIssued: March 2025'
+    },
+    'docker.txt': {
+      type: 'file',
+      content: 'Docker Certified Associate\nIssued: January 2025'
+    }
+  }
+}
+```
+
+### Nested Directory Structure
+
+Create deeply nested directory structures:
+
+```typescript Terminal.tsx
+'documents': {
+  type: 'directory',
+  contents: {
+    'work': {
+      type: 'directory',
+      contents: {
+        'reports': {
+          type: 'directory',
+          contents: {
+            'q1-2025.txt': {
+              type: 'file',
+              content: 'Q1 2025 Performance Report...'
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Access**:
+```bash
+guest@portfolio:~$ cd documents/work/reports
+guest@portfolio:~/documents/work/reports$ cat q1-2025.txt
+```
+
+### Dynamic File Content
+
+Generate file content dynamically:
+
+```typescript Terminal.tsx
+const [fileSystem, setFileSystem] = useState(() => {
+  const currentYear = new Date().getFullYear();
+  const experience = currentYear - 2022; // Started in 2022
+  
+  return {
+    '~': {
+      type: 'directory',
+      contents: {
+        'stats.txt': {
+          type: 'file',
+          content: `Years of Experience: ${experience}\nCurrent Year: ${currentYear}`
+        }
+      }
+    }
+  };
+});
+```
+
+## Styling Customization
+
+### Terminal Window Styling
+
+Modify the terminal container appearance:
+
+```typescript Terminal.tsx:475
+<div className="
+  border-2 border-neutral-800 dark:border-neutral-700  {/* Border */}
+  rounded-sm                                           {/* Corners */}
+  w-full max-w-[700px]                                {/* Width */}
+  h-[500px] max-h-[80vh]                              {/* Height */}
+  bg-black/90                                         {/* Background */}
+  backdrop-blur-sm                                    {/* Blur effect */}
+  p-2 sm:p-4                                          {/* Padding */}
+  overflow-y-auto                                     {/* Scroll */}
+  font-mono                                           {/* Font */}
+  terminal-glow                                       {/* Custom glow */}
+">
+```
+
+**Customization examples**:
+
+<CodeGroup>
+```typescript Larger Terminal
+// Change dimensions
+w-full max-w-[900px]  // Wider
+h-[700px]             // Taller
+```
+
+```typescript Different Colors
+// Change color scheme
+border-cyan-500       // Cyan border
+bg-slate-900/95       // Different background
+```
+
+```typescript Rounded Corners
+// More rounded corners
+rounded-lg            // Large radius
+rounded-xl            // Extra large radius
+```
+</CodeGroup>
+
+### Terminal Title Bar
+
+Customize the window controls and title:
+
+```typescript Terminal.tsx:476-489
+<div className="flex justify-between mb-3 sm:mb-5 items-center">
+  {/* Window controls */}
+  <div className="flex gap-1 sm:gap-2">
+    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full"></div>
+    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-yellow-500 rounded-full"></div>
+    <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
+  </div>
+  
+  {/* Custom title */}
+  <h1 className="text-white text-xs sm:text-sm">
+    Pranav's Portfolio Terminal v2.0
+  </h1>
+  
+  {/* Terminal type badge */}
+  <span className="text-green-400 border border-green-400 rounded px-2 py-1">
+    zsh
+  </span>
+</div>
+```
+
+### Prompt Customization
+
+Modify the terminal prompt appearance:
+
+```typescript Terminal.tsx:461-464
+const getPrompt = () => {
+  const displayDir = currentDirectory === '~' ? '~' : currentDirectory.replace(/^~\//, '');
+  
+  // Simple prompt
+  return `${userName || 'guest'}@portfolio:${displayDir}$`;
+  
+  // Or with emojis
+  return `🚀 ${userName || 'guest'} → ${displayDir} >`;
+  
+  // Or with time
+  const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+  return `[${time}] ${userName}@portfolio:${displayDir}$`;
+};
+```
+
+### Text Colors
+
+Customize output text colors:
+
+```typescript Terminal.tsx
+// In your command output
+case 'colorful':
+  output = (
+    <div>
+      <div className="text-red-400">Red text</div>
+      <div className="text-blue-400">Blue text</div>
+      <div className="text-green-400">Green text</div>
+      <div className="text-yellow-400">Yellow text</div>
+      <div className="text-purple-400">Purple text</div>
+      <div className="text-pink-400">Pink text</div>
+      <div className="text-cyan-400">Cyan text</div>
+    </div>
+  );
+  break;
+```
+
+## Advanced Customization
+
+### Auto-Completion Enhancement
+
+Improve the tab completion functionality:
+
+```typescript Terminal.tsx:133-146
+const autoComplete = () => {
+  const parts = input.trim().split(' ');
+  const command = parts[0];
+  const lastPart = parts[parts.length - 1];
+  const currentPath = getCurrentPath();
+
+  // Complete command names
+  if (parts.length === 1) {
+    const commands = [
+      'ls', 'cd', 'pwd', 'cat', 'mkdir', 'touch', 'rm',
+      'whoami', 'date', 'uname', 'history', 'clear',
+      'echo', 'experience', 'github', 'help'
+    ];
+    
+    const matches = commands.filter(cmd => cmd.startsWith(lastPart));
+    if (matches.length === 1) {
+      setInput(matches[0]);
+    }
+    return;
+  }
+
+  // Complete file/directory names
+  if (currentPath.contents) {
+    const matches = Object.keys(currentPath.contents)
+      .filter(name => name.startsWith(lastPart));
+
+    if (matches.length === 1) {
+      parts[parts.length - 1] = matches[0];
+      setInput(parts.join(' '));
+    } else if (matches.length > 1) {
+      // Show all matches
+      setCommands(prev => [
+        ...prev,
+        {
+          id: Date.now(),
+          input: input,
+          time: getFormattedTime(),
+          output: matches.join('  '),
+          directory: currentDirectory,
+        }
+      ]);
+    }
+  }
+};
+```
+
+### Command Aliases
+
+Add command aliases for convenience:
+
+```typescript Terminal.tsx
+switch (command) {
+  case 'list':
+  case 'll':
+  case 'dir':
+  case 'ls':
+    // ls command implementation
+    const currentPath = getCurrentPath();
+    // ...
+    break;
+    
+  case 'remove':
+  case 'delete':
+  case 'rm':
+    // rm command implementation
+    break;
+}
+```
+
+### Custom Command Parser
+
+Implement advanced command parsing:
+
+```typescript Terminal.tsx
+const parseCommand = (input: string) => {
+  // Handle quoted arguments
+  const regex = /[^\s"]+|"([^"]*)"/g;
+  const parts = [];
+  let match;
+  
+  while ((match = regex.exec(input)) !== null) {
+    parts.push(match[1] ? match[1] : match[0]);
+  }
+  
+  return {
+    command: parts[0]?.toLowerCase() || '',
+    args: parts.slice(1),
+    flags: parts.filter(p => p.startsWith('-'))
+  };
+};
+
+// Use in processCommand
+const processCommand = async (e: KeyboardEvent<HTMLInputElement>) => {
+  e.preventDefault();
+  const { command, args, flags } = parseCommand(input.trim());
+  
+  // Now you can check for flags
+  switch (command) {
+    case 'ls':
+      const showHidden = flags.includes('-a');
+      const longFormat = flags.includes('-l');
+      // ...
+      break;
+  }
+};
+```
+
+### Welcome Message
+
+Add a custom welcome message when the terminal loads:
+
+```typescript Terminal.tsx
+useEffect(() => {
+  const checkVisitor = async () => {
+    const hasVisited = sessionStorage.getItem('hasVisited');
+    if (!hasVisited) {
+      setIsAskingName(true);
+      sessionStorage.setItem('hasVisited', 'true');
+      
+      // Add welcome message
+      setCommands([{
+        id: Date.now(),
+        input: '',
+        time: getFormattedTime(),
+        output: (
+          <div className="space-y-2">
+            <div className="text-cyan-400 text-lg font-bold">
+              Welcome to Pranav's Portfolio Terminal! 🚀
+            </div>
+            <div className="text-gray-300">
+              This is an interactive terminal experience.
+            </div>
+            <div className="text-yellow-400">
+              Type 'help' to see available commands.
+            </div>
+          </div>
+        ),
+        directory: '~',
+      }]);
+    }
+  };
+  checkVisitor();
+}, []);
+```
+
+## Configuration File Approach
+
+Create a separate configuration file for easy management:
+
+```typescript config/terminal-config.ts
+export const terminalConfig = {
+  // File system structure
+  fileSystem: {
+    '~': {
+      type: 'directory',
+      contents: {
+        'about.txt': { type: 'file', content: '...' },
+        // ... more files
+      }
+    }
+  },
+  
+  // Available commands
+  commands: [
+    'ls', 'cd', 'pwd', 'cat', 'mkdir', 'touch', 'rm',
+    'whoami', 'date', 'uname', 'history', 'clear',
+    'echo', 'experience', 'github', 'help'
+  ],
+  
+  // Styling
+  theme: {
+    backgroundColor: 'bg-black/90',
+    borderColor: 'border-neutral-800',
+    textColor: 'text-green-100',
+    promptColor: 'text-green-500',
+    directoryColor: 'text-blue-400',
+  },
+  
+  // Prompt format
+  promptFormat: (user: string, dir: string) => 
+    `${user}@portfolio:${dir}$`,
+};
+```
+
+Then import and use in `Terminal.tsx`:
+
+```typescript Terminal.tsx
+import { terminalConfig } from '@/config/terminal-config';
+
+const [fileSystem, setFileSystem] = useState(terminalConfig.fileSystem);
+```
+
+## Testing Your Customizations
+
+<Steps>
+  <Step title="Start development server">
+    ```bash
+    npm run dev
+    ```
+  </Step>
+
+  <Step title="Open the terminal">
+    Navigate to the terminal component in your browser
+  </Step>
+
+  <Step title="Test new commands">
+    ```bash
+    # Test each new command
+    guest@portfolio:~$ your-new-command
+    
+    # Test with arguments
+    guest@portfolio:~$ your-command arg1 arg2
+    
+    # Test tab completion
+    guest@portfolio:~$ your-co<Tab>
+    ```
+  </Step>
+
+  <Step title="Verify file system changes">
+    ```bash
+    # Check new files/directories exist
+    guest@portfolio:~$ ls
+    guest@portfolio:~$ cd new-directory
+    guest@portfolio:~/new-directory$ cat new-file.txt
+    ```
+  </Step>
+</Steps>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Keep Commands Simple" icon="lightbulb">
+    - Each command should do one thing well
+    - Use clear, descriptive names
+    - Provide helpful error messages
+    - Include usage information for complex commands
+  </Accordion>
+
+  <Accordion title="Maintain Consistent Styling" icon="palette">
+    - Use consistent color scheme
+    - Keep output formatting uniform
+    - Match the terminal's overall aesthetic
+    - Use Tailwind classes for maintainability
+  </Accordion>
+
+  <Accordion title="Handle Errors Gracefully" icon="shield-check">
+    - Provide clear error messages
+    - Validate user input
+    - Handle edge cases
+    - Don't crash on invalid input
+  </Accordion>
+
+  <Accordion title="Document Your Changes" icon="book">
+    - Add comments to complex logic
+    - Update the help command
+    - Document custom commands
+    - Maintain a changelog
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Terminal Commands" icon="terminal" href="/terminal/commands">
+    Review all available commands
+  </Card>
+  <Card title="File System" icon="folder-tree" href="/terminal/file-system">
+    Understand the file system structure
+  </Card>
+  <Card title="Component Reference" icon="code" href="/components/terminal">
+    Explore the Terminal component in detail
+  </Card>
+  <Card title="Terminal Mode" icon="terminal" href="/features/terminal-mode">
+    Learn more about the terminal interface
+  </Card>
+</CardGroup>

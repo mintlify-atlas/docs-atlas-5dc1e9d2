@@ -1,0 +1,379 @@
+---
+title: Floating Dock
+description: macOS-style floating dock navigation component with hover animations
+---
+
+The FloatingDock component provides a macOS-inspired navigation dock with smooth animations, hover effects, and responsive mobile menu.
+
+## Component Overview
+
+The dock adapts between desktop and mobile views, providing an intuitive navigation experience across all devices.
+
+## Props
+
+<ParamField path="items" type="DockItem[]" required>
+  Array of navigation items to display in the dock.
+  
+  ```typescript
+  interface DockItem {
+    title: string;
+    icon: React.ReactNode;
+    href: string;
+    action?: () => void;
+  }
+  ```
+</ParamField>
+
+<ParamField path="desktopClassName" type="string">
+  Additional CSS classes for desktop dock.
+</ParamField>
+
+<ParamField path="mobileClassName" type="string">
+  Additional CSS classes for mobile dock.
+</ParamField>
+
+## Usage Example
+
+### Basic Implementation
+
+```typescript
+import { FloatingDock } from '@/components/ui/floating-dock';
+import {
+  IconHome,
+  IconSettings,
+  IconBrandGithub,
+  IconBrandX,
+} from '@tabler/icons-react';
+
+function Navigation() {
+  const links = [
+    {
+      title: 'Home',
+      icon: <IconHome className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+      href: '#',
+    },
+    {
+      title: 'Settings',
+      icon: <IconSettings className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+      href: '#',
+      action: () => console.log('Settings clicked'),
+    },
+    {
+      title: 'Twitter',
+      icon: <IconBrandX className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+      href: 'https://x.com/username',
+    },
+    {
+      title: 'GitHub',
+      icon: <IconBrandGithub className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+      href: 'https://github.com/username',
+    },
+  ];
+
+  return (
+    <FloatingDock
+      items={links}
+      desktopClassName="fixed bottom-4 left-1/2 -translate-x-1/2"
+      mobileClassName="fixed bottom-4 right-4"
+    />
+  );
+}
+```
+
+### From Navbar Component
+
+Real implementation from the portfolio:
+
+```typescript
+import { FloatingDock } from './ui/floating-dock';
+import {
+  IconBrandGithub,
+  IconBrandX,
+  IconHome,
+  IconSettings,
+  IconDeviceGamepad2,
+} from '@tabler/icons-react';
+
+function FloatingDockDemo({
+  desktopClassName,
+  mobileClassName,
+  onWallpaperChange,
+}: FloatingDockDemoProps) {
+  const [showSettings, setShowSettings] = useState(false);
+  const [showGames, setShowGames] = useState(false);
+
+  const links = [
+    {
+      title: 'Home',
+      icon: <IconHome className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+      href: '#',
+    },
+    {
+      title: 'Settings',
+      icon: <IconSettings className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+      href: '#',
+      action: () => setShowSettings(true),
+    },
+    {
+      title: 'Games',
+      icon: <IconDeviceGamepad2 className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+      href: '#',
+      action: () => setShowGames(true),
+    },
+    {
+      title: 'Twitter',
+      icon: <IconBrandX className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+      href: 'https://x.com/_pranav69',
+    },
+    {
+      title: 'GitHub',
+      icon: <IconBrandGithub className="h-full w-full text-neutral-500 dark:text-neutral-300" />,
+      href: 'https://github.com/pranav322',
+    },
+  ];
+
+  return (
+    <>
+      <FloatingDock
+        items={links}
+        desktopClassName={desktopClassName}
+        mobileClassName={mobileClassName}
+      />
+
+      {showSettings && (
+        <SettingsWindow
+          onClose={() => setShowSettings(false)}
+          onWallpaperChange={onWallpaperChange}
+        />
+      )}
+      {showGames && <GamesWindow onClose={() => setShowGames(false)} />}
+    </>
+  );
+}
+```
+
+## Desktop Dock
+
+The desktop dock features magnification animations on hover, similar to macOS:
+
+### Hover Animation
+
+```typescript
+// Icon size transforms based on mouse distance
+let widthTransform = useTransform(distance, [-150, 0, 150], [40, 80, 40]);
+let heightTransform = useTransform(distance, [-150, 0, 150], [40, 80, 40]);
+
+// Icon content size
+let widthTransformIcon = useTransform(distance, [-150, 0, 150], [20, 40, 20]);
+let heightTransformIcon = useTransform(distance, [-150, 0, 150], [20, 40, 20]);
+
+// Apply spring physics
+let width = useSpring(widthTransform, {
+  mass: 0.1,
+  stiffness: 150,
+  damping: 12,
+});
+let height = useSpring(heightTransform, {
+  mass: 0.1,
+  stiffness: 150,
+  damping: 12,
+});
+```
+
+### Desktop Styling
+
+```typescript
+<motion.div
+  onMouseMove={e => mouseX.set(e.pageX)}
+  onMouseLeave={() => mouseX.set(Infinity)}
+  className="hidden md:flex h-16 gap-2 lg:gap-4 items-end rounded-2xl bg-gray-50 dark:bg-neutral-900 px-3 lg:px-4 pb-3 shadow-lg backdrop-blur-sm"
+  initial={{ y: 100, opacity: 0 }}
+  animate={{ y: 0, opacity: 1 }}
+  transition={{
+    type: 'spring',
+    stiffness: 300,
+    damping: 30,
+    delay: 0.2,
+  }}
+>
+  {items.map(item => (
+    <IconContainer mouseX={mouseX} key={item.title} {...item} />
+  ))}
+</motion.div>
+```
+
+## Mobile Dock
+
+On mobile, the dock transforms into a floating button that expands into a menu:
+
+### Mobile Menu Implementation
+
+```typescript
+const FloatingDockMobile = ({ items, className }: { items: DockItem[]; className?: string }) => {
+  const [open, setOpen] = useState(false);
+  
+  return (
+    <div className={cn('relative block md:hidden', className)}>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            layoutId="nav"
+            className="absolute bottom-full mb-2 right-0 flex flex-col gap-2 min-w-max"
+          >
+            {items.map((item, idx) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                transition={{ delay: (items.length - 1 - idx) * 0.05 }}
+                className="flex items-center gap-2 bg-gray-50 dark:bg-neutral-900 rounded-full px-3 py-2"
+              >
+                {/* Icon and label */}
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <motion.button
+        onClick={() => setOpen(!open)}
+        whileTap={{ scale: 0.95 }}
+        className="h-12 w-12 rounded-full bg-gray-50 dark:bg-neutral-800 flex items-center justify-center shadow-lg"
+      >
+        <motion.div animate={{ rotate: open ? 45 : 0 }}>
+          <IconLayoutNavbarCollapse className="h-5 w-5" />
+        </motion.div>
+      </motion.button>
+    </div>
+  );
+};
+```
+
+## Icon Container
+
+Each icon in the dock is wrapped in an `IconContainer` that handles:
+
+- Mouse distance calculation
+- Size transformations
+- Hover state
+- Focus state
+- Tooltip display
+
+```typescript
+function IconContainer({
+  mouseX,
+  title,
+  icon,
+  href,
+  action,
+}: {
+  mouseX: MotionValue;
+  title: string;
+  icon: React.ReactNode;
+  href: string;
+  action?: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+
+  const isExternal = href && href.startsWith('http');
+  const isLink = isExternal || (href && href !== '#');
+
+  // Render as Link or button based on href/action
+  return isLink ? (
+    <Link href={href} target={isExternal ? '_blank' : undefined}>
+      {/* Icon content */}
+    </Link>
+  ) : (
+    <button onClick={action}>
+      {/* Icon content */}
+    </button>
+  );
+}
+```
+
+## Tooltip on Hover
+
+Tooltips appear above icons on hover or focus:
+
+```typescript
+<AnimatePresence>
+  {(hovered || focused) && (
+    <motion.div
+      initial={{ opacity: 0, y: 10, x: '-50%' }}
+      animate={{ opacity: 1, y: 0, x: '-50%' }}
+      exit={{ opacity: 0, y: 2, x: '-50%' }}
+      className="px-2 py-0.5 whitespace-pre rounded-md bg-gray-100 border dark:bg-neutral-800 dark:border-neutral-900 dark:text-white border-gray-200 text-neutral-700 absolute left-1/2 -translate-x-1/2 -top-8 w-fit text-xs"
+    >
+      {title}
+    </motion.div>
+  )}
+</AnimatePresence>
+```
+
+## Link vs Action Handling
+
+The dock intelligently handles both navigation links and action callbacks:
+
+```typescript
+// External links open in new tab
+if (href.startsWith('http')) {
+  return (
+    <Link
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {content}
+    </Link>
+  );
+}
+
+// Internal navigation
+if (href && href !== '#') {
+  return <Link href={href}>{content}</Link>;
+}
+
+// Action callback (e.g., opening a window)
+return (
+  <button onClick={action}>
+    {content}
+  </button>
+);
+```
+
+## Accessibility Features
+
+- Keyboard navigation support
+- Focus visible states
+- ARIA labels for all interactive elements
+- Proper semantic HTML (Links vs buttons)
+
+```typescript
+<Link
+  href={href}
+  aria-label={title}
+  onFocus={() => setFocused(true)}
+  onBlur={() => setFocused(false)}
+  className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 rounded-full"
+>
+  {content}
+</Link>
+```
+
+## Responsive Breakpoints
+
+```css
+/* Desktop dock visible on md+ screens */
+.hidden.md:flex { display: none; }
+@media (min-width: 768px) {
+  .hidden.md:flex { display: flex; }
+}
+
+/* Mobile dock visible only on mobile */
+.block.md:hidden { display: block; }
+@media (min-width: 768px) {
+  .block.md:hidden { display: none; }
+}
+```

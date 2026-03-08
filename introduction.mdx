@@ -1,0 +1,196 @@
+---
+title: Introduction
+description: A unique portfolio experience blending GUI and CLI interfaces with dynamic window management and real-time integrations
+---
+
+# Pranavbuilds Portfolio
+
+An interactive portfolio experience that uniquely combines traditional desktop GUI with a fully functional command-line interface, built with modern web technologies and enriched with real-time integrations.
+
+## Overview
+
+The Pranavbuilds Portfolio is not just another portfolio website—it's an interactive experience that showcases skills and projects through two distinct interfaces:
+
+- **Desktop Mode**: A complete desktop environment with draggable, resizable windows, a floating dock, and customizable wallpapers
+- **Terminal Mode**: A fully functional bash-like terminal with file system navigation, command history, and custom commands
+
+Built as a Next.js application, this portfolio demonstrates advanced frontend development skills while providing an engaging way to explore projects, experience, and technical capabilities.
+
+## Key Features
+
+### Dual Interface System
+
+Switch seamlessly between GUI and CLI modes using the toggle button:
+
+- **Desktop Interface**: Familiar desktop environment with window management
+- **Terminal Interface**: Interactive bash-like terminal with command completion
+
+### Advanced Window Management
+
+The desktop mode features a complete window system:
+
+- **Draggable Windows**: Move windows by dragging the title bar
+- **Resizable Windows**: Resize from any corner or edge
+- **Window Controls**: Minimize, maximize/restore, and close buttons
+- **Responsive Design**: Automatically adapts to mobile with fullscreen windows
+- **Smooth Animations**: Powered by Framer Motion for fluid transitions
+
+### Real-Time Integrations
+
+<CardGroup cols={2}>
+  <Card title="Spotify Integration" icon="spotify">
+    Live playback status, top tracks, artists, genres, and playlists from Spotify API
+  </Card>
+  
+  <Card title="PDF Viewer" icon="file-pdf">
+    Built-in PDF reader for viewing documents and books with navigation controls
+  </Card>
+  
+  <Card title="Custom Browser" icon="browser">
+    Embedded browser window for web navigation within the portfolio
+  </Card>
+  
+  <Card title="Interactive Terminal" icon="terminal">
+    Full bash-like terminal with file system, command history, and tab completion
+  </Card>
+</CardGroup>
+
+### Interactive Terminal
+
+The CLI mode provides a rich terminal experience:
+
+```bash
+guest@portfolio:~$ help
+Available commands:
+ls - list directory contents
+cd - change directory
+pwd - print working directory
+cat - display file contents
+experience - show professional experience
+github - open GitHub profile
+```
+
+Features include:
+- Virtual file system with directories and files
+- Command history (navigate with ↑/↓ arrows)
+- Tab completion for file and directory names
+- Custom commands for portfolio content
+- Math expression evaluation
+
+### Visual Design
+
+- **Neumorphic Elements**: Soft, modern design with depth
+- **Gradient Backgrounds**: Dynamic gradient overlays and effects
+- **Smooth Animations**: Framer Motion for all transitions
+- **Custom Wallpapers**: Multiple wallpaper options in settings
+- **Floating Dock**: macOS-style dock with magnification effect
+- **Dark Theme**: Optimized for dark mode with custom color schemes
+
+## Architecture Overview
+
+### Technology Stack
+
+<CodeGroup>
+```json package.json
+{
+  "dependencies": {
+    "next": "^15.2.8",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "framer-motion": "^12.33.0",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
+```
+</CodeGroup>
+
+**Frontend Framework**: Next.js 15 with React 19
+- App Router for modern routing
+- Server and client components
+- TypeScript for type safety
+- Dynamic imports for code splitting
+
+**UI & Animations**: Framer Motion & TailwindCSS
+- Motion primitives for smooth animations
+- Utility-first CSS with Tailwind
+- Custom components with Aceternity UI
+- Responsive design patterns
+
+**Window Management**: re-resizable + Framer Motion
+- Drag and drop with motion controls
+- Resizable components with constraints
+- Mobile-responsive fullscreen mode
+
+**Additional Libraries**:
+- `@react-pdf-viewer/core`: PDF viewing capabilities
+- `@tabler/icons-react`: Icon system
+- `firebase`: Backend services integration
+- `lucide-react`: Additional icon set
+
+### Project Structure
+
+```plaintext
+app/
+├── components/
+│   ├── windows/          # Window components (About, Projects, Skills, etc.)
+│   ├── ui/               # UI components (WindowWrapper, DesktopIcons, etc.)
+│   ├── Terminal/         # Terminal implementation
+│   ├── spotify/          # Spotify integration components
+│   └── helpers/          # Data helpers (Projects, Skills, Experience)
+├── api/
+│   └── spotify/          # Spotify API routes
+├── contexts/
+│   └── ThemeContext.tsx  # Theme management
+├── page.tsx              # Main page component
+└── layout.tsx            # Root layout
+```
+
+## Use Cases
+
+### For Visitors
+
+- **Explore Projects**: Browse through projects with detailed information, tech stacks, and live demos
+- **View Experience**: Check professional experience and skills in both GUI and CLI formats
+- **Interactive Learning**: Understand the developer's capabilities through the implementation itself
+- **Music Taste**: See real-time Spotify statistics and music preferences
+
+### For Developers
+
+- **Reference Implementation**: Study advanced React patterns and window management
+- **Animation Techniques**: Learn Framer Motion for complex animations
+- **API Integration**: See real-world examples of external API integration
+- **TypeScript Patterns**: Explore type-safe React component development
+
+### For Recruiters
+
+- **Technical Assessment**: Evaluate frontend development skills through the portfolio itself
+- **Project Quality**: Review actual code examples and implementations
+- **User Experience**: Experience attention to detail and UX design
+- **Full-Stack Capability**: See backend integration with Spotify API and Firebase
+
+## What Makes It Unique
+
+Unlike traditional portfolios that simply list projects and skills, this portfolio:
+
+1. **Demonstrates Skills Through Implementation**: The portfolio itself showcases the developer's capabilities
+2. **Dual Interface Philosophy**: Appeals to both GUI-loving users and CLI enthusiasts
+3. **Rich Interactions**: Every element is interactive and provides immediate feedback
+4. **Real Data**: Integrates with real APIs (Spotify) for live, dynamic content
+5. **Attention to Detail**: From window shadows to terminal prompts, every detail is polished
+
+<Note>
+  The portfolio is live at [pranavbuilds.tech](https://pranavbuilds.tech) and the source code is available on [GitHub](https://github.com/pranav322/portfolio-v3)
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Get the portfolio running locally in minutes
+  </Card>
+  
+  <Card title="Installation Guide" icon="download" href="/installation">
+    Complete installation and setup instructions
+  </Card>
+</CardGroup>

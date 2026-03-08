@@ -1,0 +1,567 @@
+---
+title: 'Deployment Guide'
+description: 'Deploy the Pranavbuilds Portfolio to production environments'
+---
+
+## Overview
+
+This guide covers deploying both the Next.js frontend and FastAPI backend to production. The recommended setup is:
+
+- **Frontend**: Vercel or Netlify
+- **Backend**: Railway
+- **Database**: Railway PostgreSQL or Supabase
+
+## Architecture
+
+```
+┌─────────────────┐      ┌──────────────────┐
+│  Vercel/Netlify │─────▶│   Railway API    │
+│   (Frontend)    │      │   (Backend)      │
+└─────────────────┘      └────────┬─────────┘
+                                  │
+                         ┌────────▼─────────┐
+                         │   PostgreSQL     │
+                         │   (pgvector)     │
+                         └──────────────────┘
+```
+
+## Frontend Deployment (Next.js)
+
+### Deploy to Vercel (Recommended)
+
+Vercel is the recommended platform for Next.js applications.
+
+<Steps>
+  <Step title="Install Vercel CLI">
+    ```bash
+    npm install -g vercel
+    ```
+  </Step>
+
+  <Step title="Login to Vercel">
+    ```bash
+    vercel login
+    ```
+  </Step>
+
+  <Step title="Deploy">
+    ```bash
+    # From project root
+    vercel
+
+    # Follow the prompts:
+    # - Set up and deploy? [Y/n] Y
+    # - Link to existing project? [y/N] N
+    # - Project name: [your-project-name]
+    # - Directory: ./
+    ```
+  </Step>
+
+  <Step title="Configure environment variables">
+    In the Vercel dashboard:
+    1. Go to Settings → Environment Variables
+    2. Add all variables from `.env.local`:
+       - `NEXT_PUBLIC_API_URL`
+       - `NEXT_PUBLIC_SPOTIFY_CLIENT_ID` (if using Spotify)
+       - etc.
+  </Step>
+
+  <Step title="Deploy to production">
+    ```bash
+    vercel --prod
+    ```
+  </Step>
+</Steps>
+
+#### Vercel Configuration
+
+Create `vercel.json` in the project root (optional):
+
+```json vercel.json
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["iad1"]
+}
+```
+
+### Deploy to Netlify (Alternative)
+
+<Steps>
+  <Step title="Install Netlify CLI">
+    ```bash
+    npm install -g netlify-cli
+    ```
+  </Step>
+
+  <Step title="Login to Netlify">
+    ```bash
+    netlify login
+    ```
+  </Step>
+
+  <Step title="Initialize deployment">
+    ```bash
+    netlify init
+    ```
+  </Step>
+
+  <Step title="Configure build settings">
+    Create `netlify.toml`:
+
+    ```toml netlify.toml
+    [build]
+      command = "npm run build"
+      publish = ".next"
+
+    [[plugins]]
+      package = "@netlify/plugin-nextjs"
+    ```
+  </Step>
+
+  <Step title="Deploy">
+    ```bash
+    netlify deploy --prod
+    ```
+  </Step>
+</Steps>
+
+### Build Configuration
+
+The production build uses the following npm script:
+
+```json package.json
+{
+  "scripts": {
+    "build": "next build"
+  }
+}
+```
+
+**Build process**:
+1. TypeScript compilation
+2. Static page generation
+3. Route optimization
+4. Asset bundling with Turbopack
+
+**Build output**: `.next/` directory
+
+<Note>
+  Ensure all environment variables are set before building. The build will fail if required variables are missing.
+</Note>
+
+## Backend Deployment (FastAPI)
+
+### Deploy to Railway (Recommended)
+
+Railway provides easy deployment for Python applications with automatic PostgreSQL provisioning.
+
+<Steps>
+  <Step title="Install Railway CLI">
+    ```bash
+    # macOS/Linux
+    curl -fsSL https://railway.app/install.sh | sh
+
+    # Windows
+    powershell -c "irm https://railway.app/install.ps1 | iex"
+    ```
+  </Step>
+
+  <Step title="Login to Railway">
+    ```bash
+    railway login
+    ```
+  </Step>
+
+  <Step title="Initialize Railway project">
+    ```bash
+    cd pranav
+    railway init
+    ```
+  </Step>
+
+  <Step title="Provision PostgreSQL">
+    ```bash
+    railway add --plugin postgres
+    ```
+
+    Railway will automatically:
+    - Create a PostgreSQL database
+    - Set the `DATABASE_URL` environment variable
+    - Install pgvector extension
+  </Step>
+
+  <Step title="Configure environment variables">
+    ```bash
+    # Set Azure OpenAI variables
+    railway variables set AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com/"
+    railway variables set AZURE_OPENAI_API_KEY="your_key"
+    railway variables set AZURE_OPENAI_API_VERSION="2024-02-15-preview"
+    railway variables set AZURE_DEPLOYMENT_NAME="gpt-4.1"
+    ```
+
+    Or set them in the Railway dashboard: Project → Variables
+  </Step>
+
+  <Step title="Deploy">
+    ```bash
+    railway up
+    ```
+  </Step>
+</Steps>
+
+#### Railway Configuration
+
+The `railway.json` file in the project root configures the backend deployment:
+
+```json railway.json
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "hypercorn main:app --bind \"[::]:$PORT\"",
+    "variables": {
+      "ROOT_DIRECTORY": "/app/pranav"
+    }
+  }
+}
+```
+
+**Configuration details**:
+- **Builder**: NIXPACKS (Railway's intelligent builder)
+- **Start command**: Runs Hypercorn ASGI server
+- **Root directory**: Points to `pranav/` folder
+- **Port**: Railway automatically provides `$PORT`
+
+<Tip>
+  Railway automatically detects Python projects and installs dependencies from `pyproject.toml`.
+</Tip>
+
+### Manual Deployment (VPS/Docker)
+
+For deploying to your own server:
+
+<Steps>
+  <Step title="Create Dockerfile">
+    Create `pranav/Dockerfile`:
+
+    ```dockerfile Dockerfile
+    FROM python:3.11-slim
+
+    WORKDIR /app
+
+    # Install uv
+    RUN pip install uv
+
+    # Copy project files
+    COPY pyproject.toml uv.lock ./
+    COPY src/ ./src/
+    COPY main.py ./
+
+    # Install dependencies
+    RUN uv sync --frozen
+
+    # Expose port
+    EXPOSE 8000
+
+    # Run application
+    CMD ["uv", "run", "hypercorn", "main:app", "--bind", "0.0.0.0:8000"]
+    ```
+  </Step>
+
+  <Step title="Build Docker image">
+    ```bash
+    cd pranav
+    docker build -t pranav-backend .
+    ```
+  </Step>
+
+  <Step title="Run container">
+    ```bash
+    docker run -d \
+      -p 8000:8000 \
+      -e AZURE_OPENAI_ENDPOINT="your_endpoint" \
+      -e AZURE_OPENAI_API_KEY="your_key" \
+      -e AZURE_OPENAI_API_VERSION="2024-02-15-preview" \
+      -e AZURE_DEPLOYMENT_NAME="gpt-4.1" \
+      -e DATABASE_URL="your_database_url" \
+      --name pranav-api \
+      pranav-backend
+    ```
+  </Step>
+</Steps>
+
+### Alternative: Deploy to Heroku
+
+<Steps>
+  <Step title="Create Procfile">
+    ```text pranav/Procfile
+    web: hypercorn main:app --bind "[::]:$PORT"
+    ```
+  </Step>
+
+  <Step title="Deploy">
+    ```bash
+    heroku login
+    heroku create pranav-backend
+    git subtree push --prefix pranav heroku main
+    ```
+  </Step>
+
+  <Step title="Add PostgreSQL addon">
+    ```bash
+    heroku addons:create heroku-postgresql:mini
+    ```
+  </Step>
+</Steps>
+
+## Database Setup
+
+### Railway PostgreSQL
+
+Railway automatically provisions PostgreSQL with pgvector:
+
+1. Add PostgreSQL plugin in Railway dashboard
+2. Copy `DATABASE_URL` from environment variables
+3. pgvector is pre-installed
+
+### Supabase (Alternative)
+
+<Steps>
+  <Step title="Create Supabase project">
+    1. Go to [Supabase Dashboard](https://app.supabase.com)
+    2. Create new project
+    3. Wait for database provisioning
+  </Step>
+
+  <Step title="Enable pgvector">
+    Run in SQL Editor:
+
+    ```sql
+    CREATE EXTENSION IF NOT EXISTS vector;
+    ```
+  </Step>
+
+  <Step title="Get connection string">
+    1. Go to Project Settings → Database
+    2. Copy Connection string (URI)
+    3. Replace `[YOUR-PASSWORD]` with your password
+  </Step>
+
+  <Step title="Update environment variables">
+    ```bash
+    railway variables set DATABASE_URL="postgresql://..."
+    ```
+  </Step>
+</Steps>
+
+## Environment Setup for Production
+
+### Frontend Environment Variables (Vercel)
+
+```env
+NEXT_PUBLIC_API_URL=https://your-backend.railway.app
+NEXT_PUBLIC_SPOTIFY_CLIENT_ID=production_client_id
+NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET=production_client_secret
+NEXT_PUBLIC_SPOTIFY_REDIRECT_URI=https://your-domain.com/spotify-auth
+```
+
+### Backend Environment Variables (Railway)
+
+```env
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your_production_key
+AZURE_OPENAI_API_VERSION=2024-02-15-preview
+AZURE_DEPLOYMENT_NAME=gpt-4.1
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+```
+
+<Warning>
+  Always use different API keys for production and development!
+</Warning>
+
+## Post-Deployment Verification
+
+<Steps>
+  <Step title="Check backend health">
+    ```bash
+    curl https://your-backend.railway.app/health
+    # Expected: {"status": "healthy"}
+    ```
+  </Step>
+
+  <Step title="Test API endpoint">
+    ```bash
+    curl https://your-backend.railway.app/
+    # Expected: {"name": "Pranav AI", "version": "1.0.0", ...}
+    ```
+  </Step>
+
+  <Step title="Visit frontend">
+    Open your Vercel deployment URL and verify:
+    - Pages load correctly
+    - Terminal works
+    - API integration functions
+  </Step>
+
+  <Step title="Check API documentation">
+    Visit `https://your-backend.railway.app/docs` to see interactive API docs
+  </Step>
+</Steps>
+
+## CI/CD with GitHub Actions
+
+Automate deployments with GitHub Actions:
+
+```yaml .github/workflows/deploy.yml
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npm run build
+      - uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          railway up --service backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Build fails on Vercel">
+    **Common causes**:
+    - Missing environment variables
+    - TypeScript errors
+    - Dependency conflicts
+
+    **Solution**:
+    1. Check build logs in Vercel dashboard
+    2. Run `npm run build` locally first
+    3. Verify all environment variables are set
+  </Accordion>
+
+  <Accordion title="Backend not starting on Railway">
+    **Check**:
+    1. Railway logs: `railway logs`
+    2. Environment variables are set correctly
+    3. DATABASE_URL includes pgvector
+    4. Azure OpenAI credentials are valid
+
+    **Common issues**:
+    - Missing environment variables
+    - Database connection failed
+    - Port binding error (use Railway's `$PORT`)
+  </Accordion>
+
+  <Accordion title="CORS errors in production">
+    Update `main.py` to include your frontend domain:
+
+    ```python
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:3000",
+            "https://your-domain.vercel.app"
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    ```
+  </Accordion>
+
+  <Accordion title="Database connection timeout">
+    **Solutions**:
+    1. Check if database is running
+    2. Verify DATABASE_URL format
+    3. Check network/firewall rules
+    4. Increase connection timeout in settings
+  </Accordion>
+</AccordionGroup>
+
+## Monitoring and Maintenance
+
+### Frontend (Vercel)
+
+- **Analytics**: Vercel Analytics (automatic)
+- **Logs**: Vercel Dashboard → Deployments → View Logs
+- **Speed Insights**: Enable in project settings
+
+### Backend (Railway)
+
+- **Logs**: `railway logs` or Railway dashboard
+- **Metrics**: Railway provides CPU, memory, network metrics
+- **Monitoring**: Set up alerts in Railway dashboard
+
+### Database Backups
+
+**Railway**:
+```bash
+# Backup database
+railway run pg_dump $DATABASE_URL > backup.sql
+
+# Restore
+railway run psql $DATABASE_URL < backup.sql
+```
+
+**Supabase**: Automatic backups (check dashboard)
+
+## Performance Optimization
+
+<CardGroup cols={2}>
+  <Card title="Frontend Optimization" icon="gauge-high">
+    - Enable Next.js image optimization
+    - Use static generation where possible
+    - Implement lazy loading
+    - Configure caching headers
+  </Card>
+  <Card title="Backend Optimization" icon="rocket">
+    - Enable database connection pooling
+    - Implement response caching
+    - Use Redis for session storage
+    - Monitor API response times
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="gear" href="/development/environment-variables">
+    Configure production environment
+  </Card>
+  <Card title="API Architecture" icon="diagram-project" href="/api/architecture">
+    Learn about the RAG chatbot architecture
+  </Card>
+  <Card title="Terminal Commands" icon="terminal" href="/terminal/commands">
+    Explore available terminal commands
+  </Card>
+  <Card title="Features Overview" icon="sparkles" href="/features/overview">
+    Discover all portfolio features
+  </Card>
+</CardGroup>

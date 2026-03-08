@@ -1,0 +1,610 @@
+---
+title: 'Terminal Commands'
+description: 'Complete reference for all terminal commands in the Pranavbuilds Portfolio'
+---
+
+## Overview
+
+The interactive terminal in the portfolio supports a variety of Unix-like commands for navigating the file system, viewing files, and interacting with the portfolio content.
+
+<Tip>
+  Type `help` in the terminal to see all available commands at any time.
+</Tip>
+
+## Command Reference
+
+### Navigation Commands
+
+<AccordionGroup>
+  <Accordion title="ls - List Directory Contents" icon="list">
+    Display all files and directories in the current location.
+
+    **Syntax**:
+    ```bash
+    ls
+    ```
+
+    **Output**:
+    - Directories are shown in <span style={{color: '#60A5FA'}}>blue</span> with a trailing `/`
+    - Files are shown in white
+
+    **Example**:
+    ```bash
+    guest@portfolio:~$ ls
+    about.txt  projects/  experience/  skills.txt  contact.txt
+    ```
+
+    **Features**:
+    - Color-coded output for easy distinction
+    - Shows all items in current directory
+    - No options/flags supported
+  </Accordion>
+
+  <Accordion title="cd - Change Directory" icon="folder-open">
+    Navigate to a different directory.
+
+    **Syntax**:
+    ```bash
+    cd [directory]
+    cd          # Go to home directory
+    cd ..       # Go to parent directory
+    ```
+
+    **Examples**:
+    ```bash
+    # Navigate to projects directory
+    guest@portfolio:~$ cd projects
+    guest@portfolio:~/projects$
+
+    # Go back to parent
+    guest@portfolio:~/projects$ cd ..
+    guest@portfolio:~$
+
+    # Return to home
+    guest@portfolio:~/projects/subfolder$ cd
+    guest@portfolio:~$
+    ```
+
+    **Error handling**:
+    ```bash
+    guest@portfolio:~$ cd nonexistent
+    cd: nonexistent: No such file or directory
+    ```
+  </Accordion>
+
+  <Accordion title="pwd - Print Working Directory" icon="map-pin">
+    Display the current directory path.
+
+    **Syntax**:
+    ```bash
+    pwd
+    ```
+
+    **Example**:
+    ```bash
+    guest@portfolio:~/projects$ pwd
+    ~/projects
+    ```
+
+    **Output**: Full path from home directory (`~`)
+  </Accordion>
+</AccordionGroup>
+
+### File Operations
+
+<AccordionGroup>
+  <Accordion title="cat - Display File Contents" icon="file-lines">
+    Read and display the contents of a file.
+
+    **Syntax**:
+    ```bash
+    cat [filename]
+    ```
+
+    **Examples**:
+    ```bash
+    # Read about file
+    guest@portfolio:~$ cat about.txt
+    I am Pranav, currently pursuing B.E in computer science from chandigarh university.
+
+    # Read skills file
+    guest@portfolio:~$ cat skills.txt
+    React, Node.js, Express, MongoDB, Python, Django, Flutter
+    ```
+
+    **Errors**:
+    ```bash
+    # Missing filename
+    guest@portfolio:~$ cat
+    cat: missing file operand
+
+    # File doesn't exist
+    guest@portfolio:~$ cat nonexistent.txt
+    cat: nonexistent.txt: No such file or directory
+
+    # Try to cat a directory
+    guest@portfolio:~$ cat projects
+    cat: projects: Is a directory
+    ```
+  </Accordion>
+
+  <Accordion title="touch - Create File" icon="file-plus">
+    Create a new empty file or update file timestamp.
+
+    **Syntax**:
+    ```bash
+    touch [filename]
+    ```
+
+    **Examples**:
+    ```bash
+    # Create new file
+    guest@portfolio:~$ touch newfile.txt
+    guest@portfolio:~$ ls
+    about.txt  projects/  experience/  skills.txt  contact.txt  newfile.txt
+
+    # Touch existing file (no visible change)
+    guest@portfolio:~$ touch about.txt
+    ```
+
+    **Errors**:
+    ```bash
+    # Missing filename
+    guest@portfolio:~$ touch
+    touch: missing file operand
+    ```
+  </Accordion>
+
+  <Accordion title="rm - Remove File" icon="trash">
+    Delete a file from the current directory.
+
+    **Syntax**:
+    ```bash
+    rm [filename]
+    ```
+
+    **Examples**:
+    ```bash
+    # Remove a file
+    guest@portfolio:~$ rm newfile.txt
+
+    # Verify removal
+    guest@portfolio:~$ ls
+    about.txt  projects/  experience/  skills.txt  contact.txt
+    ```
+
+    **Errors**:
+    ```bash
+    # Missing filename
+    guest@portfolio:~$ rm
+    rm: missing operand
+
+    # Try to remove directory
+    guest@portfolio:~$ rm projects
+    rm: cannot remove 'projects': Is a directory
+
+    # File doesn't exist
+    guest@portfolio:~$ rm nonexistent.txt
+    rm: cannot remove 'nonexistent.txt': No such file or directory
+    ```
+
+    <Warning>
+      File deletion is permanent within the terminal session. Files are removed from the in-memory file system.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="mkdir - Make Directory" icon="folder-plus">
+    Create a new directory.
+
+    **Syntax**:
+    ```bash
+    mkdir [directory_name]
+    ```
+
+    **Examples**:
+    ```bash
+    # Create new directory
+    guest@portfolio:~$ mkdir notes
+    guest@portfolio:~$ ls
+    about.txt  projects/  experience/  skills.txt  contact.txt  notes/
+
+    # Navigate into it
+    guest@portfolio:~$ cd notes
+    guest@portfolio:~/notes$
+    ```
+
+    **Errors**:
+    ```bash
+    # Missing directory name
+    guest@portfolio:~$ mkdir
+    mkdir: missing operand
+
+    # Directory already exists
+    guest@portfolio:~$ mkdir projects
+    mkdir: cannot create directory 'projects': File exists
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### System Information
+
+<AccordionGroup>
+  <Accordion title="whoami - Display Current User" icon="user">
+    Show the current username.
+
+    **Syntax**:
+    ```bash
+    whoami
+    ```
+
+    **Example**:
+    ```bash
+    guest@portfolio:~$ whoami
+    guest
+    # Or your name if you entered it when first launching the terminal
+    ```
+
+    **Note**: The username is set when you first open the terminal. If you don't provide a name, it defaults to "guest".
+  </Accordion>
+
+  <Accordion title="date - Display Current Date" icon="calendar">
+    Show the current date and time.
+
+    **Syntax**:
+    ```bash
+    date
+    ```
+
+    **Example**:
+    ```bash
+    guest@portfolio:~$ date
+    Sun Mar 08 2026 15:30:45 GMT-0500 (Eastern Standard Time)
+    ```
+
+    **Output**: Full date string with timezone
+  </Accordion>
+
+  <Accordion title="uname - System Information" icon="computer">
+    Display system information.
+
+    **Syntax**:
+    ```bash
+    uname [option]
+    ```
+
+    **Options**:
+    | Flag | Description | Output |
+    |------|-------------|--------|
+    | (none) | System name | `Linux` |
+    | `-s` | System name | `Linux` |
+    | `-r` | Kernel release | `5.4.0-42-generic` |
+    | `-a` | All information | Full system details |
+
+    **Examples**:
+    ```bash
+    # Default
+    guest@portfolio:~$ uname
+    Linux
+
+    # System name
+    guest@portfolio:~$ uname -s
+    Linux
+
+    # Kernel release
+    guest@portfolio:~$ uname -r
+    5.4.0-42-generic
+
+    # All information
+    guest@portfolio:~$ uname -a
+    Linux portfolio 5.4.0-42-generic #46-Ubuntu SMP Fri Jul 10 00:24:02 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### History and Output
+
+<AccordionGroup>
+  <Accordion title="history - Command History" icon="clock-rotate-left">
+    Display all previously executed commands.
+
+    **Syntax**:
+    ```bash
+    history
+    ```
+
+    **Example**:
+    ```bash
+    guest@portfolio:~$ history
+    1  ls
+    2  cd projects
+    3  pwd
+    4  cat about.txt
+    5  history
+    ```
+
+    **Features**:
+    - Each command is numbered
+    - Shows all commands from current session
+    - Use arrow keys (↑/↓) to navigate history
+  </Accordion>
+
+  <Accordion title="echo - Display Text" icon="message">
+    Print text or variables to the terminal.
+
+    **Syntax**:
+    ```bash
+    echo [text...]
+    ```
+
+    **Examples**:
+    ```bash
+    # Simple text
+    guest@portfolio:~$ echo Hello World
+    Hello World
+
+    # Multiple words
+    guest@portfolio:~$ echo Welcome to my portfolio
+    Welcome to my portfolio
+
+    # Empty echo
+    guest@portfolio:~$ echo
+    
+    ```
+
+    **Note**: Unlike bash, variables like `$PATH` are not expanded in this terminal.
+  </Accordion>
+
+  <Accordion title="clear - Clear Terminal" icon="broom">
+    Clear all previous command output from the terminal.
+
+    **Syntax**:
+    ```bash
+    clear
+    ```
+
+    **Example**:
+    ```bash
+    guest@portfolio:~$ clear
+    # Terminal is cleared, showing only the prompt
+    ```
+
+    **Effect**: Removes all command history from display (but preserves it for arrow key navigation)
+  </Accordion>
+</AccordionGroup>
+
+### Portfolio-Specific Commands
+
+<AccordionGroup>
+  <Accordion title="experience - Show Professional Experience" icon="briefcase">
+    Display detailed professional experience information.
+
+    **Syntax**:
+    ```bash
+    experience
+    ```
+
+    **Example Output**:
+    ```bash
+    guest@portfolio:~$ experience
+
+    PROFESSIONAL EXPERIENCE
+
+    GradGuide - LLM Developer Intern (Backend)
+    May 2025 - Aug 2025 | Remote
+    Backend developer specializing in FastAPI and large language model (LLM) integration.
+    Tech: Python, FastAPI, LLM Integration, RAG Systems, GCP, PostgreSQL, MongoDB
+
+    💡 Tip: Navigate to ~/experience/ directory to explore detailed files
+    📝 Currently pursuing B.E. in Computer Science at Chandigarh University (2022-2026)
+    ```
+
+    **Alternative**: Navigate to `~/experience/` directory for detailed files:
+    ```bash
+    guest@portfolio:~$ cd experience
+    guest@portfolio:~/experience$ ls
+    gradguide-internship.txt  summary.txt
+
+    guest@portfolio:~/experience$ cat gradguide-internship.txt
+    # Detailed internship information...
+    ```
+  </Accordion>
+
+  <Accordion title="github - Open GitHub Profile" icon="github">
+    Open Pranav's GitHub profile in a new tab.
+
+    **Syntax**:
+    ```bash
+    github
+    ```
+
+    **Example**:
+    ```bash
+    guest@portfolio:~$ github
+    Opening GitHub profile...
+    ```
+
+    **Behavior**: Opens https://github.com/Pranav322 in a new browser tab
+  </Accordion>
+
+  <Accordion title="help - Show Available Commands" icon="circle-question">
+    Display a list of all available commands.
+
+    **Syntax**:
+    ```bash
+    help
+    ```
+
+    **Example Output**:
+    ```bash
+    guest@portfolio:~$ help
+
+    Available commands:
+    ls - list directory contents
+    cd - change directory
+    pwd - print working directory
+    cat - display file contents
+    mkdir - create directory
+    touch - create file
+    rm - remove file
+    experience - show professional experience
+    whoami - display current user
+    date - display current date
+    uname - system information
+    history - command history
+    clear - clear terminal
+    echo - display text
+    github - open GitHub profile
+
+    Use Tab for auto-completion, ↑/↓ for history
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Special Features
+
+<AccordionGroup>
+  <Accordion title="Math Expressions" icon="calculator">
+    The terminal can evaluate simple mathematical expressions.
+
+    **Supported operations**: `+`, `-`, `*`, `/`
+
+    **Examples**:
+    ```bash
+    guest@portfolio:~$ 5+3
+    8
+
+    guest@portfolio:~$ 10*4
+    40
+
+    guest@portfolio:~$ 100/5
+    20
+
+    guest@portfolio:~$ 15-7
+    8
+    ```
+
+    **Limitations**:
+    - No spaces allowed
+    - Single operation only
+    - Format: `number operator number`
+  </Accordion>
+
+  <Accordion title="Tab Auto-completion" icon="keyboard">
+    Use the Tab key to auto-complete file and directory names.
+
+    **How to use**:
+    1. Start typing a filename or directory name
+    2. Press `Tab`
+    3. If there's only one match, it completes automatically
+    4. If multiple matches exist, nothing happens
+
+    **Example**:
+    ```bash
+    guest@portfolio:~$ cat abo<Tab>
+    guest@portfolio:~$ cat about.txt
+    ```
+  </Accordion>
+
+  <Accordion title="Command History Navigation" icon="arrows-up-down">
+    Navigate through previous commands using arrow keys.
+
+    **Keys**:
+    - `↑` (Up Arrow): Previous command
+    - `↓` (Down Arrow): Next command
+
+    **Example**:
+    ```bash
+    # After running several commands
+    guest@portfolio:~$ ls
+    guest@portfolio:~$ cd projects
+    guest@portfolio:~/projects$ pwd
+    
+    # Press ↑ to get: pwd
+    # Press ↑ again to get: cd projects
+    # Press ↑ again to get: ls
+    # Press ↓ to move forward through history
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Command Syntax Table
+
+| Command | Syntax | Description | Example |
+|---------|--------|-------------|--------|
+| `ls` | `ls` | List directory contents | `ls` |
+| `cd` | `cd [directory]` | Change directory | `cd projects` |
+| `pwd` | `pwd` | Print working directory | `pwd` |
+| `cat` | `cat [file]` | Display file contents | `cat about.txt` |
+| `mkdir` | `mkdir [name]` | Create directory | `mkdir notes` |
+| `touch` | `touch [file]` | Create file | `touch test.txt` |
+| `rm` | `rm [file]` | Remove file | `rm test.txt` |
+| `whoami` | `whoami` | Display current user | `whoami` |
+| `date` | `date` | Show current date/time | `date` |
+| `uname` | `uname [option]` | System information | `uname -a` |
+| `history` | `history` | Show command history | `history` |
+| `clear` | `clear` | Clear terminal screen | `clear` |
+| `echo` | `echo [text]` | Display text | `echo Hello` |
+| `experience` | `experience` | Show experience details | `experience` |
+| `github` | `github` | Open GitHub profile | `github` |
+| `help` | `help` | Show available commands | `help` |
+
+## Error Messages
+
+| Error | Command | Cause |
+|-------|---------|-------|
+| `bash: [command]: command not found` | Any | Invalid command name |
+| `cat: missing file operand` | `cat` | No filename provided |
+| `cat: [file]: No such file or directory` | `cat` | File doesn't exist |
+| `cat: [name]: Is a directory` | `cat` | Tried to cat a directory |
+| `cd: [dir]: No such file or directory` | `cd` | Directory doesn't exist |
+| `mkdir: missing operand` | `mkdir` | No directory name provided |
+| `mkdir: cannot create directory '[name]': File exists` | `mkdir` | Directory already exists |
+| `touch: missing file operand` | `touch` | No filename provided |
+| `rm: missing operand` | `rm` | No filename provided |
+| `rm: cannot remove '[name]': Is a directory` | `rm` | Tried to remove a directory |
+| `bash: syntax error in expression` | Math | Invalid mathematical expression |
+
+## Tips and Tricks
+
+<CardGroup cols={2}>
+  <Card title="Quick Navigation" icon="rocket">
+    - Use `cd` (no args) to return home
+    - Use `cd ..` to go up one level
+    - Tab completion works for files/folders
+  </Card>
+  
+  <Card title="Keyboard Shortcuts" icon="keyboard">
+    - `↑/↓`: Navigate command history
+    - `Tab`: Auto-complete names
+    - `Enter`: Execute command
+  </Card>
+  
+  <Card title="Explore Files" icon="folder-tree">
+    - Use `ls` to see what's available
+    - `cat` files to read content
+    - Navigate to `~/experience/` for details
+  </Card>
+  
+  <Card title="Learn More" icon="book">
+    - Type `help` for command list
+    - Type `experience` for work history
+    - Type `github` to see projects
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="File System" icon="folder-tree" href="/terminal/file-system">
+    Learn about the terminal file system structure
+  </Card>
+  <Card title="Customization" icon="paintbrush" href="/terminal/customization">
+    Customize the terminal and add new commands
+  </Card>
+  <Card title="Terminal Component" icon="code" href="/components/terminal">
+    Technical details of the Terminal component
+  </Card>
+  <Card title="Terminal Mode" icon="terminal" href="/features/terminal-mode">
+    Learn more about the terminal interface
+  </Card>
+</CardGroup>

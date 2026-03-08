@@ -1,0 +1,406 @@
+---
+title: 'PDF Viewer Integration'
+description: 'Interactive PDF viewer using react-pdf for displaying resumes and book collections'
+---
+
+## Overview
+
+The portfolio includes two PDF viewer implementations:
+
+1. **PdfWindow** - Simple native PDF viewer for resumes
+2. **BooksWindow** - Advanced PDF viewer with book library using react-pdf
+
+Both components provide draggable, resizable windows with dark-themed interfaces.
+
+## PdfWindow Component
+
+**Location:** `app/components/windows/PdfWindow.tsx`
+
+A lightweight PDF viewer that uses the browser's native PDF rendering capabilities.
+
+### Features
+
+- Native browser PDF rendering using `<object>` and `<iframe>` fallback
+- Draggable and resizable window
+- Minimize and maximize controls
+- Full-screen capable
+- Download fallback for unsupported browsers
+
+### Usage
+
+```tsx
+import { PdfWindow } from '@/app/components/windows/PdfWindow';
+
+<PdfWindow 
+  filePath="/fullstack_dev.pdf" 
+  onClose={() => setShowPdf(false)} 
+/>
+```
+
+### Props
+
+```typescript
+interface PdfWindowProps {
+  onClose: () => void;
+  filePath: string; // e.g., '/backend_dev.pdf'
+}
+```
+
+### Implementation Details
+
+**Location:** `app/components/windows/PdfWindow.tsx:63`
+
+```tsx
+<div className="flex-1 bg-white">
+  <object data={filePath} type="application/pdf" className="w-full h-full">
+    <iframe src={filePath} className="w-full h-full border-none" />
+    <div className="p-4 text-sm text-gray-800">
+      Your browser cannot display PDFs inline. You can
+      <a
+        href={filePath}
+        className="text-blue-600 underline ml-1"
+        target="_blank"
+        rel="noreferrer"
+      >
+        download the file
+      </a>
+      instead.
+    </div>
+  </object>
+</div>
+```
+
+The component uses a three-tier fallback strategy:
+1. Try `<object>` tag (preferred)
+2. Fall back to `<iframe>`
+3. Show download link if both fail
+
+### Available PDF Files
+
+The portfolio includes these resume PDFs:
+
+- `/fullstack_dev.pdf` - Full Stack Developer resume
+- `/backend_dev.pdf` - Backend Developer resume
+- `/flutter-dev.pdf` - Flutter Developer resume
+
+## BooksWindow Component
+
+**Location:** `app/components/windows/BooksWindow.tsx`
+
+An advanced PDF viewer with a book library interface using `@react-pdf-viewer` packages.
+
+### Features
+
+- Interactive book library with cover images
+- Advanced PDF viewer with dark theme
+- Toolbar with zoom, navigation, and search
+- Sidebar with thumbnails, bookmarks, and attachments
+- Mobile-responsive layout
+- Smooth animations with Framer Motion
+
+### Usage
+
+```tsx
+import { BooksWindow } from '@/app/components/windows/BooksWindow';
+
+<BooksWindow onClose={() => setShowBooks(false)} />
+```
+
+### Book Library Interface
+
+**Location:** `app/components/windows/BooksWindow.tsx:86`
+
+```typescript
+const books: Book[] = [
+  {
+    title: 'Women',
+    path: '/books/Women-CharlesBukowski.pdf',
+    author: 'Charles Bukowski',
+    coverImage: '/books/covers/bukowski.jpeg',
+  },
+  {
+    title: 'No Longer Human',
+    path: '/books/no-osamu.pdf',
+    author: 'Dazai Osamu',
+    coverImage: '/books/covers/nolongercover.jpg',
+  },
+  {
+    title: 'A Thousand Splendid Suns',
+    path: '/books/thousand-khaled.pdf',
+    author: 'Khaled Hosseini',
+    coverImage: '/books/covers/thousand.jpg',
+  },
+  {
+    title: 'God is not Great',
+    path: '/books/godisnotgreat.pdf',
+    author: 'Ziauddin Sardar',
+    coverImage: '/books/covers/godisnotgreat-cover.jpeg',
+  },
+];
+```
+
+### Dark Theme Configuration
+
+**Location:** `app/components/windows/BooksWindow.tsx:275`
+
+```tsx
+<ThemeContext.Provider
+  value={{
+    background: '#1a1b1e',
+    text: '#ffffff',
+    controlLabel: {
+      backgroundColor: '#2b2c2f',
+      color: '#ffffff',
+    },
+    toolbar: {
+      backgroundColor: '#2b2c2f',
+      color: '#ffffff',
+    },
+    tooltip: {
+      backgroundColor: '#3f3f3f',
+      color: '#ffffff',
+    },
+  }}
+>
+  <Viewer
+    fileUrl={selectedBook}
+    plugins={[defaultLayoutPluginInstance]}
+    defaultScale={SpecialZoomLevel.PageFit}
+    theme="dark"
+    className="dark-pdf-viewer"
+  />
+</ThemeContext.Provider>
+```
+
+### PDF Worker Configuration
+
+**Location:** `app/components/windows/BooksWindow.tsx:84`
+
+```tsx
+const pdfWorkerUrl = `https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`;
+
+<Worker workerUrl={pdfWorkerUrl}>
+  {/* Viewer component */}
+</Worker>
+```
+
+## react-pdf Integration
+
+### Required Packages
+
+**Location:** `package.json:20-21,36`
+
+```json
+{
+  "dependencies": {
+    "@react-pdf-viewer/core": "^3.12.0",
+    "@react-pdf-viewer/default-layout": "^3.12.0",
+    "react-pdf": "^9.2.1",
+    "canvas": "^3.1.0"
+  }
+}
+```
+
+### Installation
+
+```bash
+npm install @react-pdf-viewer/core @react-pdf-viewer/default-layout react-pdf canvas
+```
+
+### Required CSS Imports
+
+**Location:** `app/components/windows/BooksWindow.tsx:7-8`
+
+```tsx
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+```
+
+### Plugin Configuration
+
+**Location:** `app/components/windows/BooksWindow.tsx:31`
+
+```tsx
+const defaultLayoutPluginInstance = defaultLayoutPlugin({
+  sidebarTabs: defaultTabs => defaultTabs,
+  toolbarPlugin: {
+    moreActionsPopover: {
+      render: props => (
+        <div style={{ backgroundColor: '#2b2c2f', color: '#ffffff' }}>
+          {props.children}
+        </div>
+      ),
+    },
+  },
+});
+```
+
+## Window Controls
+
+Both components use the `WindowWrapper` component for consistent window behavior:
+
+**Location:** `app/components/ui/WindowWrapper.tsx`
+
+### Features
+
+- Drag and drop repositioning
+- Resize handles
+- Minimize/Maximize/Close buttons
+- Window constraints (stays within viewport)
+- Animated transitions
+
+### Usage in PdfWindow
+
+**Location:** `app/components/windows/PdfWindow.tsx:21`
+
+```tsx
+<WindowWrapper
+  isMaximized={isMaximized}
+  onClose={onClose}
+  onMinimize={handleMinimize}
+  initialWidth={1000}
+  initialHeight={700}
+>
+  {/* Window content */}
+</WindowWrapper>
+```
+
+### Usage in BooksWindow
+
+**Location:** `app/components/windows/BooksWindow.tsx:114`
+
+```tsx
+<WindowWrapper
+  isMaximized={isMaximized}
+  onClose={onClose}
+  onMinimize={handleMinimize}
+  initialWidth={800}
+  initialHeight={600}
+>
+  {/* Window content */}
+</WindowWrapper>
+```
+
+## Mobile Responsiveness
+
+The BooksWindow includes special handling for mobile devices:
+
+**Location:** `app/components/windows/BooksWindow.tsx:159`
+
+```tsx
+{/* Mobile: Horizontal scroll, Desktop: Grid */}
+<div className="md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+  {/* Mobile horizontal scroll container */}
+  <div className="flex gap-4 overflow-x-auto pb-4 md:hidden mobile-hide-scrollbar">
+    {books.map(book => (
+      <motion.div className="flex-shrink-0 w-40">
+        {/* Book card */}
+      </motion.div>
+    ))}
+  </div>
+  
+  {/* Desktop grid layout */}
+  <div className="hidden md:contents">
+    {books.map(book => (
+      <motion.div>
+        {/* Book card */}
+      </motion.div>
+    ))}
+  </div>
+</div>
+```
+
+## Image Handling
+
+Book covers include error handling and fallback:
+
+**Location:** `app/components/windows/BooksWindow.tsx:173`
+
+```tsx
+<div className="relative w-24 h-32 rounded-lg shadow-lg overflow-hidden">
+  {book.coverImage ? (
+    <Image
+      src={book.coverImage}
+      alt={`${book.title} cover`}
+      fill
+      className="object-cover transition-transform group-hover:scale-105 duration-300"
+      sizes="(max-width: 96px) 100vw, 96px"
+      onError={e => {
+        const target = e.target as HTMLImageElement;
+        target.style.display = 'none';
+        target.parentElement?.classList.add('fallback-active');
+      }}
+    />
+  ) : null}
+  {/* Fallback icon */}
+  <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-gray-700/50 to-gray-900/50 flex items-center justify-center">
+    <IconBook size={32} className="text-yellow-400/80" />
+  </div>
+</div>
+```
+
+## TypeScript Interfaces
+
+### PdfWindowProps
+
+```typescript
+interface PdfWindowProps {
+  onClose: () => void;
+  filePath: string; // e.g., '/backend_dev.pdf'
+}
+```
+
+### Book Interface
+
+**Location:** `app/components/windows/BooksWindow.tsx:17`
+
+```typescript
+interface Book {
+  title: string;
+  path: string;
+  author?: string;
+  coverImage: string;
+}
+```
+
+### BooksWindowProps
+
+```typescript
+interface BooksWindowProps {
+  onClose: () => void;
+}
+```
+
+## Performance Considerations
+
+### PDF.js Worker
+
+The BooksWindow uses a CDN-hosted PDF.js worker to offload PDF parsing to a separate thread:
+
+```tsx
+const pdfWorkerUrl = `https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`;
+```
+
+This prevents the main thread from blocking during PDF rendering.
+
+### Lazy Loading
+
+Books are only loaded when selected:
+
+```tsx
+{!selectedBook ? (
+  <div>{/* Show book library */}</div>
+) : (
+  <div>{/* Show PDF viewer */}</div>
+)}
+```
+
+## Custom Scrollbar Styling
+
+Both components use custom scrollbar classes:
+
+```tsx
+className="overflow-y-auto custom-scrollbar mobile-hide-scrollbar"
+```
+
+These classes should be defined in your global CSS to provide a consistent, themed scrollbar experience.

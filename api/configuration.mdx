@@ -1,0 +1,321 @@
+---
+title: Configuration
+description: Environment variables and configuration options for Pranav AI
+---
+
+# Configuration
+
+Pranav AI uses environment variables for configuration, managed through Pydantic Settings.
+
+## Environment Variables
+
+Create a `.env` file in the project root with these variables:
+
+### Azure OpenAI Configuration
+
+<ParamField path="AZURE_OPENAI_ENDPOINT" type="string" required>
+  Your Azure OpenAI resource endpoint URL.
+  
+  **Format**: `https://your-resource.openai.azure.com/`
+  
+  **Example**:
+  ```
+  AZURE_OPENAI_ENDPOINT=https://pranav-openai.openai.azure.com/
+  ```
+</ParamField>
+
+<ParamField path="AZURE_OPENAI_API_KEY" type="string" required>
+  Your Azure OpenAI API key from the Azure portal.
+  
+  **Example**:
+  ```
+  AZURE_OPENAI_API_KEY=abc123def456...
+  ```
+  
+  <Warning>
+    Keep this secret! Never commit to version control.
+  </Warning>
+</ParamField>
+
+<ParamField path="AZURE_OPENAI_API_VERSION" type="string" default="2024-02-15-preview">
+  Azure OpenAI API version to use.
+  
+  **Default**: `2024-02-15-preview`
+  
+  **Example**:
+  ```
+  AZURE_OPENAI_API_VERSION=2024-02-15-preview
+  ```
+</ParamField>
+
+<ParamField path="AZURE_DEPLOYMENT_NAME" type="string" default="gpt-4.1">
+  Name of your Azure OpenAI deployment.
+  
+  **Default**: `gpt-4.1`
+  
+  **Example**:
+  ```
+  AZURE_DEPLOYMENT_NAME=gpt-4.1
+  ```
+  
+  <Note>
+    This must match the deployment name in your Azure OpenAI resource.
+  </Note>
+</ParamField>
+
+### Database Configuration
+
+<ParamField path="DATABASE_URL" type="string" required>
+  PostgreSQL connection string.
+  
+  **Format**: `postgresql://username:password@host:port/database`
+  
+  **Example**:
+  ```
+  DATABASE_URL=postgresql://postgres:mypassword@localhost:5432/pranav_ai
+  ```
+  
+  <Note>
+    The application automatically converts this to async format (`postgresql+asyncpg://`) and removes unsupported parameters like `channel_binding`.
+  </Note>
+</ParamField>
+
+### Embedding Configuration
+
+<ParamField path="EMBEDDING_MODEL" type="string" default="all-MiniLM-L6-v2">
+  Sentence-transformers model for generating embeddings.
+  
+  **Default**: `all-MiniLM-L6-v2`
+  
+  **Example**:
+  ```
+  EMBEDDING_MODEL=all-MiniLM-L6-v2
+  ```
+  
+  <Info>
+    The default model (all-MiniLM-L6-v2) is:
+    - **Fast**: Generates embeddings quickly
+    - **Compact**: Only ~80MB download
+    - **Free**: Runs locally, no API costs
+    - **384 dimensions**: Efficient vector size
+  </Info>
+</ParamField>
+
+<ParamField path="EMBEDDING_DIMENSION" type="integer" default="384">
+  Dimension of the embedding vectors.
+  
+  **Default**: `384` (for all-MiniLM-L6-v2)
+  
+  **Example**:
+  ```
+  EMBEDDING_DIMENSION=384
+  ```
+  
+  <Warning>
+    This must match the output dimension of your `EMBEDDING_MODEL`. Changing this requires database migration.
+  </Warning>
+</ParamField>
+
+### Application Settings
+
+<ParamField path="DEBUG" type="boolean" default="false">
+  Enable debug mode with verbose logging.
+  
+  **Default**: `false`
+  
+  **Example**:
+  ```
+  DEBUG=true
+  ```
+  
+  <Note>
+    When enabled, SQLAlchemy will echo all SQL queries.
+  </Note>
+</ParamField>
+
+## Configuration File
+
+Configuration is managed in `src/config.py` using Pydantic Settings:
+
+```python src/config.py
+from pydantic_settings import BaseSettings
+from functools import lru_cache
+
+class Settings(BaseSettings):
+    """Application settings."""
+    
+    # Azure OpenAI
+    azure_openai_endpoint: str
+    azure_openai_api_key: str
+    azure_openai_api_version: str = "2024-02-15-preview"
+    azure_deployment_name: str = "gpt-4.1"
+    
+    # Database
+    database_url: str
+    
+    # Embedding model (local)
+    embedding_model: str = "all-MiniLM-L6-v2"
+    embedding_dimension: int = 384
+    
+    # App settings
+    debug: bool = False
+    
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        extra = "ignore"
+
+@lru_cache()
+def get_settings() -> Settings:
+    """Get cached settings instance."""
+    return Settings()
+```
+
+## Example .env File
+
+Here's a complete example `.env` file:
+
+```bash .env
+# Azure OpenAI Configuration
+AZURE_OPENAI_ENDPOINT=https://pranav-openai.openai.azure.com/
+AZURE_OPENAI_API_KEY=abc123def456ghi789jkl012mno345pqr678stu901vwx234yz
+AZURE_OPENAI_API_VERSION=2024-02-15-preview
+AZURE_DEPLOYMENT_NAME=gpt-4.1
+
+# Database Configuration
+DATABASE_URL=postgresql://postgres:mypassword@localhost:5432/pranav_ai
+
+# Embedding Configuration (optional - uses defaults if not set)
+EMBEDDING_MODEL=all-MiniLM-L6-v2
+EMBEDDING_DIMENSION=384
+
+# Application Settings (optional)
+DEBUG=false
+```
+
+## Using Different Embedding Models
+
+You can use different sentence-transformers models:
+
+### Popular Alternatives
+
+<AccordionGroup>
+  <Accordion title="all-MiniLM-L6-v2 (Default)">
+    - **Dimensions**: 384
+    - **Size**: ~80MB
+    - **Speed**: Very fast
+    - **Use case**: General purpose, balanced performance
+    
+    ```bash
+    EMBEDDING_MODEL=all-MiniLM-L6-v2
+    EMBEDDING_DIMENSION=384
+    ```
+  </Accordion>
+  
+  <Accordion title="all-mpnet-base-v2">
+    - **Dimensions**: 768
+    - **Size**: ~420MB
+    - **Speed**: Slower but more accurate
+    - **Use case**: Higher quality embeddings
+    
+    ```bash
+    EMBEDDING_MODEL=all-mpnet-base-v2
+    EMBEDDING_DIMENSION=768
+    ```
+    
+    <Warning>
+      Requires updating the database schema to support 768 dimensions.
+    </Warning>
+  </Accordion>
+  
+  <Accordion title="paraphrase-MiniLM-L6-v2">
+    - **Dimensions**: 384
+    - **Size**: ~80MB
+    - **Speed**: Very fast
+    - **Use case**: Paraphrase detection, semantic similarity
+    
+    ```bash
+    EMBEDDING_MODEL=paraphrase-MiniLM-L6-v2
+    EMBEDDING_DIMENSION=384
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Settings Access in Code
+
+Access settings throughout the application:
+
+```python
+from src.config import get_settings
+
+settings = get_settings()
+
+# Access configuration
+print(settings.azure_openai_endpoint)
+print(settings.embedding_model)
+print(settings.database_url)
+```
+
+The `get_settings()` function uses `@lru_cache()` to ensure settings are loaded only once and cached for the application lifetime.
+
+## Environment-Specific Configuration
+
+Use different `.env` files for different environments:
+
+```bash
+# Development
+cp .env.example .env.dev
+
+# Production
+cp .env.example .env.prod
+
+# Load specific environment
+export ENV_FILE=.env.prod
+```
+
+## Security Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Never Commit Secrets" icon="lock">
+    Add `.env` to `.gitignore` to prevent committing secrets to version control.
+  </Card>
+  
+  <Card title="Use Secret Management" icon="key">
+    In production, use Azure Key Vault or similar services for secret management.
+  </Card>
+  
+  <Card title="Rotate Keys Regularly" icon="rotate">
+    Regularly rotate API keys and database passwords.
+  </Card>
+  
+  <Card title="Restrict Database Access" icon="shield">
+    Use read-only credentials where possible and limit network access.
+  </Card>
+</CardGroup>
+
+## Validation
+
+Pydantic automatically validates configuration:
+
+- **Required fields**: Will raise error if missing
+- **Type checking**: Ensures correct types (string, int, bool)
+- **Default values**: Applied when not specified
+
+If configuration is invalid, you'll see helpful error messages on startup:
+
+```
+ValidationError: 1 validation error for Settings
+azure_openai_endpoint
+  field required (type=value_error.missing)
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Setup Guide" icon="rocket" href="/api/setup">
+    Complete setup instructions
+  </Card>
+  <Card title="Chat Endpoint" icon="messages" href="/api/chat">
+    Start using the chat API
+  </Card>
+</CardGroup>

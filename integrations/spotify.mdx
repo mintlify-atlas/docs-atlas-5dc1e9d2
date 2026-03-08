@@ -1,0 +1,438 @@
+---
+title: 'Spotify Integration'
+description: 'Real-time Spotify integration showing now playing, top tracks, artists, playlists, and recently played songs'
+---
+
+## Overview
+
+The Spotify integration provides real-time music data from your Spotify account, including:
+
+- Currently playing track with live updates
+- Top tracks and artists
+- User playlists
+- Recently played tracks
+- Top genres visualization
+
+All data is fetched through the Spotify Web API using OAuth 2.0 authentication with refresh tokens.
+
+## API Routes
+
+The portfolio implements several API routes under `app/api/spotify/` to interact with the Spotify API:
+
+### Now Playing
+
+**Endpoint:** `GET /api/spotify/now-playing`
+
+**Location:** `app/api/spotify/now-playing/route.ts:4`
+
+Returns the currently playing track or `isPlaying: false` if nothing is playing.
+
+<CodeGroup>
+```typescript Request
+const response = await fetch('/api/spotify/now-playing');
+const data = await response.json();
+```
+
+```json Response
+{
+  "isPlaying": true,
+  "title": "Song Name",
+  "artist": "Artist Name",
+  "album": "Album Name",
+  "albumImageUrl": "https://i.scdn.co/image/...",
+  "songUrl": "https://open.spotify.com/track/..."
+}
+```
+</CodeGroup>
+
+### Top Tracks
+
+**Endpoint:** `GET /api/spotify/top-tracks`
+
+**Location:** `app/api/spotify/top-tracks/route.ts:4`
+
+Returns your top 10 tracks from the short-term time range.
+
+<CodeGroup>
+```typescript Request
+const response = await fetch('/api/spotify/top-tracks');
+const data = await response.json();
+```
+
+```json Response
+{
+  "tracks": [
+    {
+      "title": "Track Name",
+      "artist": "Artist Name",
+      "url": "https://open.spotify.com/track/...",
+      "albumImageUrl": "https://i.scdn.co/image/..."
+    }
+  ]
+}
+```
+</CodeGroup>
+
+**Implementation:** `lib/spotify.ts:51`
+
+```typescript
+export async function getTopTracks() {
+  const { access_token } = await getAccessToken();
+  
+  const response = await fetch(
+    `${TOP_TRACKS_ENDPOINT}?limit=10&time_range=short_term`,
+    {
+      headers: { Authorization: `Bearer ${access_token}` },
+    }
+  );
+  
+  const { items } = await response.json();
+  return {
+    tracks: items.map((track: any) => ({
+      title: track.name,
+      artist: track.artists.map((_artist: any) => _artist.name).join(', '),
+      url: track.external_urls.spotify,
+      albumImageUrl: track.album.images[0].url,
+    })),
+  };
+}
+```
+
+### Top Artists
+
+**Endpoint:** `GET /api/spotify/top-artists`
+
+**Location:** `app/api/spotify/top-artists/route.ts:4`
+
+Returns your top 8 artists with their genres and images.
+
+<CodeGroup>
+```typescript Request
+const response = await fetch('/api/spotify/top-artists');
+const data = await response.json();
+```
+
+```json Response
+{
+  "artists": [
+    {
+      "name": "Artist Name",
+      "image": "https://i.scdn.co/image/...",
+      "genres": ["genre1", "genre2"],
+      "url": "https://open.spotify.com/artist/..."
+    }
+  ]
+}
+```
+</CodeGroup>
+
+### Playlists
+
+**Endpoint:** `GET /api/spotify/playlists`
+
+**Location:** `app/api/spotify/playlists/route.ts:4`
+
+Returns up to 10 of your playlists.
+
+<CodeGroup>
+```typescript Request
+const response = await fetch('/api/spotify/playlists');
+const data = await response.json();
+```
+
+```json Response
+{
+  "playlists": [
+    {
+      "name": "Playlist Name",
+      "image": "https://i.scdn.co/image/...",
+      "tracks": 42,
+      "url": "https://open.spotify.com/playlist/..."
+    }
+  ]
+}
+```
+</CodeGroup>
+
+### Recently Played
+
+**Endpoint:** `GET /api/spotify/recently-played`
+
+**Location:** `app/api/spotify/recently-played/route.ts:4`
+
+Returns the last 5 tracks you've played.
+
+<CodeGroup>
+```typescript Request
+const response = await fetch('/api/spotify/recently-played');
+const data = await response.json();
+```
+
+```json Response
+{
+  "tracks": [
+    {
+      "title": "Track Name",
+      "artist": "Artist Name",
+      "albumImageUrl": "https://i.scdn.co/image/...",
+      "url": "https://open.spotify.com/track/...",
+      "playedAt": "10:30:45 AM"
+    }
+  ]
+}
+```
+</CodeGroup>
+
+## Authentication Flow
+
+The Spotify integration uses OAuth 2.0 with refresh tokens for authentication.
+
+### Authorization URL
+
+**Location:** `app/api/spotify/auth.ts:5`
+
+```typescript
+const SPOTIFY_AUTH_URL = `https://accounts.spotify.com/authorize
+  ?client_id=${client_id}
+  &response_type=code
+  &redirect_uri=${redirect_uri}
+  &scope=user-read-recently-played%20user-top-read%20user-read-currently-playing%20user-read-playback-state`;
+```
+
+### Callback Route
+
+**Endpoint:** `GET /api/spotify/callback`
+
+**Location:** `app/api/spotify/callback/route.ts:3`
+
+Handles the OAuth callback and exchanges the authorization code for tokens.
+
+```typescript
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get('code');
+
+  if (!code) {
+    return NextResponse.json({ error: 'No code provided' }, { status: 400 });
+  }
+
+  const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${Buffer.from(
+        `${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`
+      ).toString('base64')}`,
+    },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: 'http://localhost:3000/api/spotify/callback',
+    }),
+  });
+
+  const data = await tokenResponse.json();
+  
+  // Returns the refresh_token to be saved
+}
+```
+
+### Token Refresh
+
+**Location:** `lib/spotify.ts:11`
+
+```typescript
+async function getAccessToken() {
+  const response = await fetch(TOKEN_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${basic}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'refresh_token',
+      refresh_token: refresh_token!,
+    }),
+  });
+
+  return response.json();
+}
+```
+
+## React Components
+
+The portfolio includes several React components to display Spotify data:
+
+### NowPlaying Component
+
+**Location:** `app/components/spotify/NowPlaying.tsx`
+
+Displays the currently playing track with album art and auto-updates every 30 seconds.
+
+```tsx
+import { NowPlaying } from '@/app/components/spotify/NowPlaying';
+
+<NowPlaying />
+```
+
+**Features:**
+- Auto-refresh every 30 seconds
+- Loading state
+- "Not playing" state when idle
+- Click to open track on Spotify
+
+### TopTracks Component
+
+**Location:** `app/components/spotify/TopTracks.tsx`
+
+Displays a ranked list of your top tracks.
+
+```tsx
+import { TopTracks } from '@/app/components/spotify/TopTracks';
+
+<TopTracks />
+```
+
+### TopArtists Component
+
+**Location:** `app/components/spotify/TopArtists.tsx`
+
+Displays your top artists with their images and genres.
+
+```tsx
+import { TopArtists } from '@/app/components/spotify/TopArtists';
+
+<TopArtists />
+```
+
+### Playlists Component
+
+**Location:** `app/components/spotify/Playlists.tsx`
+
+Displays your playlists with cover images and track counts.
+
+```tsx
+import { Playlists } from '@/app/components/spotify/Playlists';
+
+<Playlists />
+```
+
+### RecentlyPlayed Component
+
+**Location:** `app/components/spotify/RecentlyPlayed.tsx`
+
+Shows the last 5 tracks you've played with timestamps.
+
+```tsx
+import { RecentlyPlayed } from '@/app/components/spotify/RecentlyPlayed';
+
+<RecentlyPlayed />
+```
+
+### TopGenres Component
+
+**Location:** `app/components/spotify/TopGenres.tsx`
+
+Visualizes your top genres based on your top artists.
+
+```tsx
+import { TopGenres } from '@/app/components/spotify/TopGenres';
+
+<TopGenres />
+```
+
+## Setup and Configuration
+
+### Environment Variables
+
+Add these to your `.env.local` file:
+
+```bash
+SPOTIFY_CLIENT_ID=your_client_id
+SPOTIFY_CLIENT_SECRET=your_client_secret
+SPOTIFY_REFRESH_TOKEN=your_refresh_token
+```
+
+### Getting Your Credentials
+
+1. **Create a Spotify App:**
+   - Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+   - Create a new app
+   - Note your Client ID and Client Secret
+
+2. **Set Redirect URI:**
+   - In your app settings, add: `http://localhost:3000/api/spotify/callback`
+
+3. **Get Refresh Token:**
+   - Visit the authorization URL (defined in `app/api/spotify/auth.ts:5`)
+   - Authorize the app
+   - You'll be redirected to `/api/spotify/callback` with your refresh token
+   - Copy the token and add it to your `.env.local`
+
+### Required Scopes
+
+**Location:** `app/api/spotify/auth.ts:5`
+
+- `user-read-recently-played` - Recently played tracks
+- `user-top-read` - Top tracks and artists
+- `user-read-currently-playing` - Now playing
+- `user-read-playback-state` - Playback state
+
+## TypeScript Types
+
+**Location:** `types/spotify.d.ts`
+
+```typescript
+export interface Track {
+  id: string;
+  title: string;
+  artist: string;
+  image: string;
+  url: string;
+  playedAt?: string;
+  previewUrl?: string;
+  timeAgo?: string;
+  albumImageUrl?: string;
+}
+
+export interface AudioFeatures {
+  danceability: number;
+  energy: number;
+  valence: number;
+  acousticness: number;
+}
+```
+
+## API Endpoints Reference
+
+### Spotify Web API Endpoints Used
+
+**Location:** `lib/spotify.ts:5-9`
+
+```typescript
+const TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token';
+const NOW_PLAYING_ENDPOINT = 'https://api.spotify.com/v1/me/player/currently-playing';
+const TOP_TRACKS_ENDPOINT = 'https://api.spotify.com/v1/me/top/tracks';
+const TOP_ARTISTS_ENDPOINT = 'https://api.spotify.com/v1/me/top/artists';
+const RECENTLY_PLAYED_ENDPOINT = 'https://api.spotify.com/v1/me/player/recently-played';
+```
+
+## Error Handling
+
+All API routes include proper error handling:
+
+```typescript
+export async function GET() {
+  try {
+    const response = await getNowPlaying();
+    return NextResponse.json(response);
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Error fetching now playing' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+Components handle errors gracefully and display fallback states when data cannot be fetched.

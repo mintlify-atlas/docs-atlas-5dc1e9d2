@@ -1,0 +1,640 @@
+---
+title: 'Terminal File System'
+description: 'Understanding the file system structure in the portfolio terminal'
+---
+
+## Overview
+
+The terminal implements a simulated Unix-like file system stored in React component state. This allows for persistent file operations during a terminal session, including navigation, file creation, and directory management.
+
+## File System Structure
+
+### Visual Hierarchy
+
+```
+~ (home directory)
+├── about.txt
+├── skills.txt
+├── contact.txt
+├── projects/
+│   ├── teamfinder.txt
+│   ├── spotify-bot.txt
+│   ├── quizapp.txt
+│   └── electrade.txt
+└── experience/
+    ├── gradguide-internship.txt
+    └── summary.txt
+```
+
+## Directory Structure
+
+### Home Directory (`~`)
+
+The root of the file system, containing personal information files and subdirectories.
+
+**Location**: `~`
+
+**Contents**:
+- `about.txt` - Personal introduction
+- `skills.txt` - Technical skills
+- `contact.txt` - Contact information
+- `projects/` - Projects directory
+- `experience/` - Professional experience directory
+
+**Example**:
+```bash
+guest@portfolio:~$ ls
+about.txt  projects/  experience/  skills.txt  contact.txt
+```
+
+## File Contents
+
+### Personal Information Files
+
+<AccordionGroup>
+  <Accordion title="about.txt" icon="user">
+    **Location**: `~/about.txt`
+    
+    **Content**:
+    ```
+    I am Pranav, currently pursuing B.E in computer science from chandigarh university.
+    ```
+
+    **Access**:
+    ```bash
+    guest@portfolio:~$ cat about.txt
+    I am Pranav, currently pursuing B.E in computer science from chandigarh university.
+    ```
+  </Accordion>
+
+  <Accordion title="skills.txt" icon="code">
+    **Location**: `~/skills.txt`
+    
+    **Content**:
+    ```
+    React, Node.js, Express, MongoDB, Python, Django, Flutter
+    ```
+
+    **Access**:
+    ```bash
+    guest@portfolio:~$ cat skills.txt
+    React, Node.js, Express, MongoDB, Python, Django, Flutter
+    ```
+  </Accordion>
+
+  <Accordion title="contact.txt" icon="envelope">
+    **Location**: `~/contact.txt`
+    
+    **Content**:
+    ```
+    Email: duckieduckk@duck.com
+    Phone: nahi bataunga
+    Address: nahi bataunga
+    ```
+
+    **Access**:
+    ```bash
+    guest@portfolio:~$ cat contact.txt
+    Email: duckieduckk@duck.com
+    Phone: nahi bataunga
+    Address: nahi bataunga
+    ```
+
+    <Note>
+      Some contact details are intentionally obscured ("nahi bataunga" = "won't tell" in Hindi)
+    </Note>
+  </Accordion>
+</AccordionGroup>
+
+### Projects Directory
+
+**Location**: `~/projects/`
+
+**Purpose**: Contains information about coding projects
+
+**Files**:
+
+<AccordionGroup>
+  <Accordion title="teamfinder.txt" icon="users">
+    **Location**: `~/projects/teamfinder.txt`
+    
+    **Content**:
+    ```
+    Team collaboration platform
+    ```
+
+    **Access**:
+    ```bash
+    guest@portfolio:~$ cd projects
+    guest@portfolio:~/projects$ cat teamfinder.txt
+    Team collaboration platform
+    ```
+  </Accordion>
+
+  <Accordion title="spotify-bot.txt" icon="music">
+    **Location**: `~/projects/spotify-bot.txt`
+    
+    **Content**:
+    ```
+    Telegram bot for Spotify integration
+    ```
+
+    **Description**: A bot that integrates Spotify functionality with Telegram
+  </Accordion>
+
+  <Accordion title="quizapp.txt" icon="circle-question">
+    **Location**: `~/projects/quizapp.txt`
+    
+    **Content**:
+    ```
+    Interactive quiz application
+    ```
+
+    **Description**: An application for creating and taking quizzes
+  </Accordion>
+
+  <Accordion title="electrade.txt" icon="bolt">
+    **Location**: `~/projects/electrade.txt`
+    
+    **Content**:
+    ```
+    Electronics trading platform
+    ```
+
+    **Description**: A platform for buying/selling electronics
+  </Accordion>
+</AccordionGroup>
+
+**Example Navigation**:
+```bash
+guest@portfolio:~$ cd projects
+guest@portfolio:~/projects$ ls
+teamfinder.txt  spotify-bot.txt  quizapp.txt  electrade.txt
+
+guest@portfolio:~/projects$ cat teamfinder.txt
+Team collaboration platform
+```
+
+### Experience Directory
+
+**Location**: `~/experience/`
+
+**Purpose**: Contains detailed professional experience information
+
+**Files**:
+
+<AccordionGroup>
+  <Accordion title="gradguide-internship.txt" icon="briefcase">
+    **Location**: `~/experience/gradguide-internship.txt`
+    
+    **Content**: Detailed internship information including:
+    - Company: GradGuide
+    - Role: LLM Developer Intern (Backend)
+    - Duration: May 2025 - Aug 2025
+    - Key Responsibilities
+    - Technologies Used
+    - Key Achievements
+
+    **Excerpt**:
+    ```
+    GradGuide - LLM Developer Intern (Backend) (May 2025 - Aug 2025)
+
+    Backend developer specializing in FastAPI and large language model (LLM) 
+    integration, with experience building scalable APIs, deploying AI systems, 
+    and delivering production-ready applications.
+
+    Key Responsibilities:
+    • Developed a RAG-based chatbot API using FastAPI...
+    • Built a recommendation engine...
+    • Handled deployment and storage on Google Cloud Platform (GCP)...
+    ...
+    ```
+
+    **Access**:
+    ```bash
+    guest@portfolio:~$ cd experience
+    guest@portfolio:~/experience$ cat gradguide-internship.txt
+    # Full detailed content displayed...
+    ```
+  </Accordion>
+
+  <Accordion title="summary.txt" icon="file-lines">
+    **Location**: `~/experience/summary.txt`
+    
+    **Content**: Condensed experience summary including:
+    - Total Experience
+    - Current Role
+    - Companies Worked
+    - Projects Completed
+    - Core Technologies
+    - Specialization
+
+    **Full Content**:
+    ```
+    EXPERIENCE SUMMARY
+
+    Total Experience: 3 months
+    Current Role: LLM Developer Intern
+    Companies Worked: 1
+    Projects Completed: 2+ (RAG Chatbot API, Recommendation Engine)
+
+    Core Technologies:
+    • Languages: Python, JavaScript
+    • Backend: FastAPI, Flask
+    • AI/ML: LLM Integration, RAG Systems
+    • Cloud: Google Cloud Platform (GCP)
+    • Databases: PostgreSQL, MongoDB
+    • Tools: Git, Docker, Postman, VS Code
+
+    Specialization: Backend development with focus on AI/ML integration 
+    and scalable API development.
+    ```
+  </Accordion>
+</AccordionGroup>
+
+**Example Navigation**:
+```bash
+guest@portfolio:~$ cd experience
+guest@portfolio:~/experience$ ls
+gradguide-internship.txt  summary.txt
+
+guest@portfolio:~/experience$ cat summary.txt
+# Summary content displayed...
+```
+
+## File System Data Structure
+
+The file system is implemented as a nested JavaScript object in React state:
+
+```typescript
+interface FileSystemItem {
+  type: 'file' | 'directory';
+  content?: string;      // For files
+  contents?: {           // For directories
+    [key: string]: FileSystemItem;
+  };
+}
+
+const fileSystem = {
+  '~': {
+    type: 'directory',
+    contents: {
+      'about.txt': {
+        type: 'file',
+        content: 'I am Pranav...'
+      },
+      'projects': {
+        type: 'directory',
+        contents: {
+          'teamfinder.txt': {
+            type: 'file',
+            content: 'Team collaboration platform'
+          },
+          // ... more files
+        }
+      },
+      // ... more items
+    }
+  }
+};
+```
+
+## File Operations
+
+### Reading Files
+
+<Steps>
+  <Step title="Navigate to the file location">
+    ```bash
+    cd projects
+    ```
+  </Step>
+
+  <Step title="List files to verify">
+    ```bash
+    ls
+    ```
+  </Step>
+
+  <Step title="Read file contents">
+    ```bash
+    cat teamfinder.txt
+    ```
+  </Step>
+</Steps>
+
+### Creating Files
+
+<Steps>
+  <Step title="Use touch command">
+    ```bash
+    touch newfile.txt
+    ```
+  </Step>
+
+  <Step title="Verify creation">
+    ```bash
+    ls
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  Newly created files have empty content. The terminal doesn't support file editing, only creation and deletion.
+</Note>
+
+### Deleting Files
+
+<Steps>
+  <Step title="Remove the file">
+    ```bash
+    rm newfile.txt
+    ```
+  </Step>
+
+  <Step title="Verify deletion">
+    ```bash
+    ls
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  You cannot delete directories with `rm`. Attempting to do so will result in an error: `rm: cannot remove 'dirname': Is a directory`
+</Warning>
+
+### Creating Directories
+
+<Steps>
+  <Step title="Create directory">
+    ```bash
+    mkdir notes
+    ```
+  </Step>
+
+  <Step title="Navigate into it">
+    ```bash
+    cd notes
+    ```
+  </Step>
+
+  <Step title="Create files inside">
+    ```bash
+    touch note1.txt
+    ls
+    ```
+  </Step>
+</Steps>
+
+## Directory Navigation
+
+### Path Resolution
+
+The terminal supports different path formats:
+
+| Path Type | Format | Example | Description |
+|-----------|--------|---------|-------------|
+| **Absolute** | `~` or `~/path` | `~/projects` | From home directory |
+| **Relative** | `dirname` | `projects` | From current directory |
+| **Parent** | `..` | `cd ..` | Go up one level |
+| **Home** | (empty) | `cd` | Return to home |
+
+### Navigation Examples
+
+<CodeGroup>
+```bash Absolute Path
+# From anywhere, go directly to projects
+guest@portfolio:~/experience$ cd ~/projects
+guest@portfolio:~/projects$
+```
+
+```bash Relative Path
+# From home, use relative path
+guest@portfolio:~$ cd projects
+guest@portfolio:~/projects$
+```
+
+```bash Parent Directory
+# Go up one level
+guest@portfolio:~/projects$ cd ..
+guest@portfolio:~$
+```
+
+```bash Home Directory
+# Return to home from anywhere
+guest@portfolio:~/experience/subdir$ cd
+guest@portfolio:~$
+```
+</CodeGroup>
+
+## State Persistence
+
+### Session-Based Storage
+
+The file system is stored in React component state:
+
+<CardGroup cols={2}>
+  <Card title="Persisted During Session" icon="check">
+    - File creations
+    - File deletions
+    - Directory creations
+    - All modifications
+  </Card>
+  
+  <Card title="Reset On Page Reload" icon="rotate">
+    - All custom files removed
+    - Returns to initial state
+    - Pre-defined files restored
+    - Directory structure reset
+  </Card>
+</CardGroup>
+
+### Initial vs. Modified State
+
+**Initial State** (on page load):
+```
+~
+├── about.txt
+├── skills.txt
+├── contact.txt
+├── projects/
+└── experience/
+```
+
+**Modified State** (after user operations):
+```
+~
+├── about.txt
+├── skills.txt
+├── contact.txt
+├── projects/
+├── experience/
+├── notes/           ← Created by user
+│   └── todo.txt     ← Created by user
+└── newfile.txt      ← Created by user
+```
+
+**After page reload**: Returns to Initial State
+
+## File System Limitations
+
+<AccordionGroup>
+  <Accordion title="No File Editing">
+    Once created, file contents cannot be modified. You can only:
+    - Create new files (empty)
+    - Read existing files
+    - Delete files
+  </Accordion>
+
+  <Accordion title="No Directory Deletion">
+    The `rm` command only works on files, not directories. There is no `rmdir` or `rm -r` functionality.
+  </Accordion>
+
+  <Accordion title="No File Moving/Copying">
+    Commands like `mv` (move) and `cp` (copy) are not implemented.
+  </Accordion>
+
+  <Accordion title="No Permissions">
+    There is no permission system. All operations are allowed (if the command supports it).
+  </Accordion>
+
+  <Accordion title="No Symlinks">
+    Symbolic links are not supported.
+  </Accordion>
+
+  <Accordion title="Session-Only Persistence">
+    Changes are lost on page reload. The file system resets to its initial state.
+  </Accordion>
+</AccordionGroup>
+
+## Practical Usage Examples
+
+### Exploring the Portfolio
+
+<Steps>
+  <Step title="Start at home">
+    ```bash
+    guest@portfolio:~$ ls
+    about.txt  projects/  experience/  skills.txt  contact.txt
+    ```
+  </Step>
+
+  <Step title="Read about file">
+    ```bash
+    guest@portfolio:~$ cat about.txt
+    I am Pranav, currently pursuing B.E in computer science from chandigarh university.
+    ```
+  </Step>
+
+  <Step title="Explore projects">
+    ```bash
+    guest@portfolio:~$ cd projects
+    guest@portfolio:~/projects$ ls
+    teamfinder.txt  spotify-bot.txt  quizapp.txt  electrade.txt
+
+    guest@portfolio:~/projects$ cat spotify-bot.txt
+    Telegram bot for Spotify integration
+    ```
+  </Step>
+
+  <Step title="Check experience">
+    ```bash
+    guest@portfolio:~/projects$ cd ../experience
+    guest@portfolio:~/experience$ cat summary.txt
+    # Experience summary displayed...
+    ```
+  </Step>
+</Steps>
+
+### Creating a Notes System
+
+<Steps>
+  <Step title="Create notes directory">
+    ```bash
+    guest@portfolio:~$ mkdir notes
+    guest@portfolio:~$ cd notes
+    ```
+  </Step>
+
+  <Step title="Create note files">
+    ```bash
+    guest@portfolio:~/notes$ touch ideas.txt
+    guest@portfolio:~/notes$ touch todo.txt
+    guest@portfolio:~/notes$ ls
+    ideas.txt  todo.txt
+    ```
+  </Step>
+
+  <Step title="Navigate back">
+    ```bash
+    guest@portfolio:~/notes$ cd
+    guest@portfolio:~$ ls
+    about.txt  projects/  experience/  skills.txt  contact.txt  notes/
+    ```
+  </Step>
+</Steps>
+
+## Technical Implementation
+
+### State Management
+
+```typescript Terminal.tsx:20-64
+const [fileSystem, setFileSystem] = useState({
+  '~': {
+    type: 'directory',
+    contents: {
+      'about.txt': { type: 'file', content: '...' },
+      'projects': {
+        type: 'directory',
+        contents: { /* ... */ }
+      },
+      // ...
+    }
+  }
+});
+```
+
+### Path Resolution Function
+
+```typescript Terminal.tsx:92-103
+const resolvePath = path => {
+  if (path.startsWith('~')) return path;
+  if (path.startsWith('/')) return path;
+  if (currentDirectory === '~') {
+    return path === '..' ? '~' : `~/${path}`;
+  }
+  return `${currentDirectory}/${path}`;
+};
+```
+
+### Current Path Getter
+
+```typescript Terminal.tsx:81-90
+const getCurrentPath = () => {
+  const parts = currentDirectory.split('/').filter(Boolean);
+  let current = fileSystem['~'];
+  for (const part of parts.slice(1)) {
+    if (current.contents && current.contents[part]) {
+      current = current.contents[part];
+    }
+  }
+  return current;
+};
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Terminal Commands" icon="terminal" href="/terminal/commands">
+    Learn all available terminal commands
+  </Card>
+  <Card title="Customization" icon="paintbrush" href="/terminal/customization">
+    Customize the file system and add new content
+  </Card>
+  <Card title="Terminal Component" icon="code" href="/components/terminal">
+    Explore the Terminal component implementation
+  </Card>
+  <Card title="Terminal Mode" icon="terminal" href="/features/terminal-mode">
+    Learn more about the terminal interface
+  </Card>
+</CardGroup>

@@ -1,80 +1,289 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick Start
+description: Get the Pranavbuilds Portfolio running on your local machine in minutes
 ---
 
-## Get started in three steps
+# Quick Start Guide
 
-Get your documentation site running locally and make your first customization.
+Get the interactive portfolio up and running on your local machine in just a few steps.
 
-### Step 1: Set up your local environment
+## Prerequisites
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+Before you begin, ensure you have:
 
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+- **Node.js** 20.x or higher installed
+- **npm**, **yarn**, or **pnpm** package manager
+- **Git** for cloning the repository
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  Check your Node.js version with `node --version`. If you need to install or update Node.js, visit [nodejs.org](https://nodejs.org)
 </Note>
+
+## Getting Started
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the portfolio repository from GitHub:
+    
+    ```bash
+    git clone https://github.com/pranav322/portfolio-v3.git
+    cd portfolio-v3
+    ```
+    
+    This will download the complete source code to your local machine.
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install all required packages using your preferred package manager:
+    
+    <CodeGroup>
+    ```bash npm
+    npm install
+    ```
+    
+    ```bash yarn
+    yarn install
+    ```
+    
+    ```bash pnpm
+    pnpm install
+    ```
+    </CodeGroup>
+    
+    This will install all dependencies listed in `package.json`, including:
+    - Next.js 15.2.8
+    - React 19
+    - Framer Motion 12.33.0
+    - TailwindCSS 3.4.1
+    - And all other required packages
+    
+    <Note>
+      The installation may take a few minutes depending on your internet connection.
+    </Note>
+  </Step>
+
+  <Step title="Start the Development Server">
+    Run the development server with Turbopack for fast refresh:
+    
+    <CodeGroup>
+    ```bash npm
+    npm run dev
+    ```
+    
+    ```bash yarn
+    yarn dev
+    ```
+    
+    ```bash pnpm
+    pnpm dev
+    ```
+    </CodeGroup>
+    
+    The server will start on `http://localhost:3000` by default.
+    
+    ```bash Output
+    ▲ Next.js 15.2.8
+    - Local:        http://localhost:3000
+    - Turbopack:    enabled
+    
+    ✓ Ready in 1.2s
+    ```
+  </Step>
+
+  <Step title="Open in Browser">
+    Open your browser and navigate to:
+    
+    ```
+    http://localhost:3000
+    ```
+    
+    You should see the portfolio's landing page with the desktop interface and a toggle button in the center.
+  </Step>
+</Steps>
+
+## First Interaction
+
+Once the portfolio is running, try these interactions to explore the features:
+
+### Desktop Mode (Default)
+
+<AccordionGroup>
+  <Accordion title="Explore the Floating Dock">
+    Hover over the dock at the bottom of the screen to see the magnification effect. Click on icons to open different windows:
+    
+    - **Home**: Return to main view
+    - **Settings**: Customize wallpaper and preferences
+    - **Games**: Play embedded browser games
+    - **Twitter/GitHub**: Visit social profiles
+  </Accordion>
+
+  <Accordion title="Interact with Desktop Icons">
+    Click on the desktop icons in the top-left corner to open various windows:
+    
+    - **About**: Personal information
+    - **Projects**: Portfolio of projects with live demos
+    - **Experience**: Professional work history
+    - **Skills**: Technical capabilities
+    - **Spotify**: Real-time music statistics
+    - **Books**: PDF library viewer
+    - **Browser**: Embedded web browser
+  </Accordion>
+
+  <Accordion title="Manage Windows">
+    Once a window is open:
+    
+    - **Drag**: Click and drag the title bar to move the window
+    - **Resize**: Drag from any corner or edge to resize
+    - **Minimize**: Click the yellow button (currently decorative)
+    - **Maximize**: Click the green button to fullscreen
+    - **Close**: Click the red X button to close the window
+  </Accordion>
+
+  <Accordion title="Change Wallpaper">
+    Open the Settings window from the dock and select from various matrix-themed wallpapers to customize your desktop background.
+  </Accordion>
+</AccordionGroup>
+
+### Terminal Mode (CLI)
+
+<AccordionGroup>
+  <Accordion title="Toggle to Terminal">
+    Click the toggle button in the center of the screen to switch to terminal mode. You'll see a bash-like terminal interface.
+  </Accordion>
+
+  <Accordion title="Enter Your Name">
+    On first visit (in the current session), you'll be prompted to enter your name:
+    
+    ```bash
+    Please enter your name to continue:
+    > John Doe
+    Welcome John Doe! Type 'help' to see available commands.
+    ```
+  </Accordion>
+
+  <Accordion title="Try Basic Commands">
+    Execute some basic commands to explore:
+    
+    ```bash
+    # List directory contents
+    guest@portfolio:~$ ls
+    about.txt  projects/  experience/  skills.txt  contact.txt
+    
+    # Display file contents
+    guest@portfolio:~$ cat about.txt
+    I am Pranav, currently pursuing B.E in computer science from chandigarh university.
+    
+    # Navigate to projects directory
+    guest@portfolio:~$ cd projects
+    guest@portfolio:~/projects$ ls
+    teamfinder.txt  spotify-bot.txt  quizapp.txt  electrade.txt
+    
+    # Show professional experience
+    guest@portfolio:~$ experience
+    ```
+  </Accordion>
+
+  <Accordion title="Use Terminal Features">
+    The terminal supports advanced features:
+    
+    - **Tab Completion**: Press Tab to auto-complete file/directory names
+    - **Command History**: Use ↑/↓ arrows to navigate previous commands
+    - **Multiple Directories**: Navigate through the virtual file system
+    - **Math Expressions**: Enter calculations like `5+3` or `10*2`
+  </Accordion>
+</AccordionGroup>
+
+## Verify Installation
+
+To ensure everything is working correctly:
+
+<Tabs>
+  <Tab title="Desktop Mode">
+    ✅ **Check Desktop Mode**
+    
+    - Desktop background visible with dot pattern
+    - Floating dock at bottom with icons
+    - Desktop icons in top-left corner
+    - Toggle button centered on screen
+    - Quote displayed in top area
+  </Tab>
+  
+  <Tab title="Terminal Mode">
+    ✅ **Check Terminal Mode**
+    
+    - Terminal window displays in center
+    - Terminal has macOS-style colored buttons
+    - Command prompt shows correctly
+    - Input field is focused and accepts text
+    - Commands execute and show output
+  </Tab>
+  
+  <Tab title="Window System">
+    ✅ **Check Window Management**
+    
+    - Windows open when clicking icons
+    - Windows can be dragged around
+    - Windows can be resized from corners
+    - Window controls (minimize/maximize/close) work
+    - Multiple windows can be open simultaneously
+  </Tab>
+</Tabs>
+
+## Common Commands
+
+Here are some useful commands to try in terminal mode:
+
+```bash Terminal Commands
+# Get help
+help
+
+# Show professional experience
+experience
+
+# List command history
+history
+
+# Display current user
+whoami
+
+# Show current date and time
+date
+
+# Open GitHub profile
+github
+
+# Clear terminal screen
+clear
+
+# Navigate file system
+cd projects
+ls
+cat teamfinder.txt
+cd ..
+pwd
+```
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card title="Complete Installation" icon="download" href="/installation">
+    Set up environment variables and configure Spotify integration
+  </Card>
+  
+  <Card title="Development Guide" icon="code" href="/development/setup">
+    Learn how to customize and extend the portfolio
+  </Card>
+</CardGroup>
+
+## Need Help?
+
+<Warning>
+  If you encounter any issues:
+  
+  1. Make sure you're using Node.js 20.x or higher
+  2. Delete `node_modules` and `package-lock.json`, then reinstall
+  3. Check the browser console for error messages
+  4. Ensure port 3000 is not already in use
+</Warning>
+
+For more detailed troubleshooting, see the [Installation Guide](/installation#troubleshooting).

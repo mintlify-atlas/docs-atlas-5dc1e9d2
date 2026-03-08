@@ -1,0 +1,388 @@
+---
+title: 'Environment Variables'
+description: 'Configure environment variables for the Pranavbuilds Portfolio project'
+---
+
+## Overview
+
+The project requires environment variables for both the frontend (Next.js) and backend (FastAPI). This guide covers all required and optional configuration options.
+
+## Frontend Environment Variables
+
+Next.js environment variables are stored in `.env.local` in the project root.
+
+### Spotify Integration
+
+If you're using the Spotify integration feature:
+
+```env .env.local
+# Spotify API Configuration
+NEXT_PUBLIC_SPOTIFY_CLIENT_ID=your_spotify_client_id
+NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+NEXT_PUBLIC_SPOTIFY_REDIRECT_URI=http://localhost:3000/spotify-auth
+```
+
+<Steps>
+  <Step title="Create Spotify App">
+    1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+    2. Create a new application
+    3. Note your Client ID and Client Secret
+  </Step>
+
+  <Step title="Configure Redirect URI">
+    Add `http://localhost:3000/spotify-auth` to the Redirect URIs in your Spotify app settings
+  </Step>
+</Steps>
+
+### Firebase Configuration
+
+For Firebase features (if applicable):
+
+```env .env.local
+# Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
+
+### Backend API URL
+
+```env .env.local
+# Backend API Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+<Note>
+  Environment variables prefixed with `NEXT_PUBLIC_` are exposed to the browser. Never use this prefix for secrets.
+</Note>
+
+## Backend Environment Variables
+
+Backend environment variables are stored in `.env` in the `pranav/` directory.
+
+### Required Variables
+
+```env pranav/.env
+# Azure OpenAI Configuration
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your_azure_openai_api_key
+AZURE_OPENAI_API_VERSION=2024-02-15-preview
+AZURE_DEPLOYMENT_NAME=gpt-4.1
+
+# Database Configuration
+DATABASE_URL=postgresql://user:password@localhost:5432/pranav_db
+```
+
+### Variable Descriptions
+
+<AccordionGroup>
+  <Accordion title="AZURE_OPENAI_ENDPOINT">
+    Your Azure OpenAI resource endpoint URL.
+
+    **Format**: `https://<your-resource-name>.openai.azure.com/`
+
+    **How to get it**:
+    1. Go to [Azure Portal](https://portal.azure.com)
+    2. Navigate to your OpenAI resource
+    3. Copy the endpoint from "Keys and Endpoint" section
+  </Accordion>
+
+  <Accordion title="AZURE_OPENAI_API_KEY">
+    Authentication key for Azure OpenAI API.
+
+    **How to get it**:
+    1. In Azure Portal, go to your OpenAI resource
+    2. Navigate to "Keys and Endpoint"
+    3. Copy KEY 1 or KEY 2
+
+    <Warning>
+      Keep this key secret! Never commit it to version control.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="AZURE_OPENAI_API_VERSION">
+    API version for Azure OpenAI service.
+
+    **Recommended**: `2024-02-15-preview`
+
+    See [Azure OpenAI API versions](https://learn.microsoft.com/en-us/azure/ai-services/openai/api-version-deprecation)
+  </Accordion>
+
+  <Accordion title="AZURE_DEPLOYMENT_NAME">
+    Name of your GPT model deployment.
+
+    **Example**: `gpt-4.1`, `gpt-4`, `gpt-35-turbo`
+
+    **How to get it**:
+    1. In Azure Portal, go to your OpenAI resource
+    2. Navigate to "Model deployments"
+    3. Use the deployment name (not the model name)
+  </Accordion>
+
+  <Accordion title="DATABASE_URL">
+    PostgreSQL connection string with pgvector extension.
+
+    **Format**: `postgresql://[user]:[password]@[host]:[port]/[database]`
+
+    **Example**: `postgresql://postgres:mypassword@localhost:5432/pranav_db`
+
+    **Requirements**:
+    - PostgreSQL 12 or higher
+    - pgvector extension installed
+
+    ```sql
+    -- Install pgvector extension
+    CREATE EXTENSION IF NOT EXISTS vector;
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Environment File Templates
+
+### Frontend `.env.local` Template
+
+```env .env.local
+# ================================
+# Pranavbuilds Portfolio - Frontend
+# ================================
+
+# Backend API
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Spotify Integration (Optional)
+NEXT_PUBLIC_SPOTIFY_CLIENT_ID=
+NEXT_PUBLIC_SPOTIFY_CLIENT_SECRET=
+NEXT_PUBLIC_SPOTIFY_REDIRECT_URI=http://localhost:3000/spotify-auth
+
+# Firebase (Optional)
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+```
+
+### Backend `pranav/.env` Template
+
+```env pranav/.env
+# ================================
+# Pranav AI Backend
+# ================================
+
+# Azure OpenAI Configuration
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your_key_here
+AZURE_OPENAI_API_VERSION=2024-02-15-preview
+AZURE_DEPLOYMENT_NAME=gpt-4.1
+
+# Database Configuration
+DATABASE_URL=postgresql://user:password@localhost:5432/pranav_db
+
+# Optional: CORS Origins (comma-separated)
+# ALLOWED_ORIGINS=http://localhost:3000,https://yourdomain.com
+
+# Optional: Server Configuration
+# PORT=8000
+# HOST=0.0.0.0
+```
+
+## PostgreSQL Setup
+
+<Steps>
+  <Step title="Install PostgreSQL">
+    <CodeGroup>
+    ```bash macOS
+    brew install postgresql@15
+    brew services start postgresql@15
+    ```
+
+    ```bash Ubuntu/Debian
+    sudo apt update
+    sudo apt install postgresql postgresql-contrib
+    sudo systemctl start postgresql
+    ```
+
+    ```bash Windows
+    # Download from https://www.postgresql.org/download/windows/
+    # Or use WSL with Ubuntu instructions
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Install pgvector extension">
+    <CodeGroup>
+    ```bash macOS
+    brew install pgvector
+    ```
+
+    ```bash Ubuntu/Debian
+    sudo apt install postgresql-server-dev-15
+    cd /tmp
+    git clone https://github.com/pgvector/pgvector.git
+    cd pgvector
+    make
+    sudo make install
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Create database and enable extension">
+    ```bash
+    # Connect to PostgreSQL
+    psql postgres
+
+    # Create database
+    CREATE DATABASE pranav_db;
+
+    # Connect to database
+    \c pranav_db
+
+    # Enable pgvector extension
+    CREATE EXTENSION IF NOT EXISTS vector;
+
+    # Verify installation
+    SELECT * FROM pg_extension WHERE extname = 'vector';
+
+    # Exit
+    \q
+    ```
+  </Step>
+
+  <Step title="Update DATABASE_URL">
+    Update your `pranav/.env` file with the correct connection string:
+
+    ```env
+    DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/pranav_db
+    ```
+  </Step>
+</Steps>
+
+## Production Configuration
+
+### Frontend (Vercel/Netlify)
+
+Add environment variables in your deployment platform:
+
+1. **Vercel**: Settings → Environment Variables
+2. **Netlify**: Site settings → Build & deploy → Environment
+
+```env
+NEXT_PUBLIC_API_URL=https://your-api-domain.com
+NEXT_PUBLIC_SPOTIFY_CLIENT_ID=your_production_client_id
+# ... other variables
+```
+
+### Backend (Railway)
+
+Railway automatically injects environment variables. Add them in the Railway dashboard:
+
+```env
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your_production_key
+AZURE_OPENAI_API_VERSION=2024-02-15-preview
+AZURE_DEPLOYMENT_NAME=gpt-4.1
+DATABASE_URL=${{Postgres.DATABASE_URL}}  # Railway provides this
+```
+
+<Note>
+  Railway automatically provides `DATABASE_URL` if you provision a PostgreSQL database.
+</Note>
+
+## Security Best Practices
+
+<Warning>
+  **Never commit `.env` files to version control!**
+</Warning>
+
+<Steps>
+  <Step title="Add to .gitignore">
+    Ensure your `.gitignore` includes:
+
+    ```gitignore
+    # Environment variables
+    .env
+    .env.local
+    .env*.local
+    pranav/.env
+    ```
+  </Step>
+
+  <Step title="Use different keys for development and production">
+    Never use production API keys in development.
+  </Step>
+
+  <Step title="Rotate keys regularly">
+    Change API keys periodically, especially if they may have been exposed.
+  </Step>
+
+  <Step title="Limit API key permissions">
+    Use the principle of least privilege for all API keys.
+  </Step>
+</Steps>
+
+## Verification
+
+Verify your environment configuration:
+
+<CodeGroup>
+```bash Frontend
+# Check if environment variables are loaded
+node -e "console.log(process.env.NEXT_PUBLIC_API_URL)"
+```
+
+```bash Backend
+cd pranav
+
+# Test database connection
+uv run python -c "from src.database import engine; print('Database connection successful!')"
+
+# Test Azure OpenAI connection
+uv run python -c "from src.config import settings; print(f'Azure endpoint: {settings.AZURE_OPENAI_ENDPOINT}')"
+```
+</CodeGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Environment variables not loading">
+    1. Restart the development server
+    2. Check file name is exactly `.env.local` (frontend) or `.env` (backend)
+    3. Verify the file is in the correct directory
+    4. Ensure no extra spaces around the `=` sign
+  </Accordion>
+
+  <Accordion title="Database connection failed">
+    1. Verify PostgreSQL is running: `pg_isready`
+    2. Check username and password in DATABASE_URL
+    3. Ensure database exists: `psql -l`
+    4. Verify pgvector extension is installed
+  </Accordion>
+
+  <Accordion title="Azure OpenAI authentication failed">
+    1. Verify endpoint URL format
+    2. Check API key is correct (no extra spaces)
+    3. Ensure deployment name matches your Azure deployment
+    4. Verify API version is supported
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Development Setup" icon="code" href="/development/setup">
+    Return to setup guide
+  </Card>
+  <Card title="Deployment" icon="rocket" href="/development/deployment">
+    Deploy to production
+  </Card>
+  <Card title="Backend API" icon="server" href="/api/chat">
+    Explore API endpoints
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/api/architecture">
+    Learn about the backend architecture
+  </Card>
+</CardGroup>

@@ -1,0 +1,435 @@
+---
+title: 'Desktop Mode'
+description: 'Interactive desktop GUI with icons, windows, and floating dock'
+icon: 'desktop'
+---
+
+# Desktop Mode
+
+Desktop Mode provides a macOS-like graphical interface with draggable desktop icons, interactive windows, and a floating dock for quick navigation.
+
+## Overview
+
+When you load the portfolio, Desktop Mode is the default view. It features:
+- Desktop icons arranged in columns
+- Floating dock at the bottom
+- Interactive windows
+- Customizable wallpapers
+- Smooth animations and transitions
+
+## Desktop Icons
+
+Desktop icons are rendered by the `DesktopIcons` component located in `app/components/ui/DesktopIcons.tsx`.
+
+### Icon Layout
+
+The component intelligently organizes icons based on device type:
+
+```tsx
+// From DesktopIcons.tsx:301-342
+const organizedColumns = useMemo(() => {
+  if (deviceType !== 'desktop') return [icons];
+  
+  // Calculate optimal layout for desktop
+  const availableHeight = windowSize.height - 180;
+  const availableWidth = windowSize.width - 100;
+  const iconHeight = 100;
+  const iconWidth = 88;
+  const totalIcons = icons.length;
+  
+  // Maximum icons per column
+  const maxIconsPerColumn = Math.max(1, Math.floor(availableHeight / iconHeight));
+  
+  // Calculate optimal columns
+  const minColumnsNeeded = Math.ceil(totalIcons / maxIconsPerColumn);
+  const maxColumnsByWidth = Math.floor(availableWidth / iconWidth);
+  const optimalColumns = Math.max(1, Math.min(minColumnsNeeded, maxColumnsByWidth, 4));
+  
+  // Fill columns naturally
+  // ...
+}, [deviceType, windowSize, icons]);
+```
+
+### Available Icons
+
+<Tabs>
+  <Tab title="Personal">
+    **About Me** - Personal information and biography
+    - Icon: User icon with blue theme
+    - Opens: AboutWindow component
+    - Content: Skills, experience, projects summary
+    
+    **Resume** - View PDF resume
+    - Icon: File text icon with red theme
+    - Opens: PdfWindow component
+    - File: `/backend_dev.pdf`
+  </Tab>
+  
+  <Tab title="Professional">
+    **Projects** - Project showcase
+    - Icon: Folder icon with yellow theme
+    - Opens: ProjectsWindow component
+    - Features: GitHub links, live demos, tech stack
+    
+    **Skills** - Technical skills
+    - Icon: Tools icon with green theme
+    - Opens: SkillsWindow component
+    - Categories: Frontend, Backend, Tools, etc.
+    
+    **Experience** - Work history
+    - Icon: Briefcase icon with green theme
+    - Opens: ExperienceWindow component
+    - Content: Timeline of professional experience
+  </Tab>
+  
+  <Tab title="Entertainment">
+    **Books** - Reading list
+    - Icon: Book icon with yellow theme
+    - Opens: BooksWindow component
+    
+    **My Spotify** - Music integration
+    - Icon: Spotify icon with Spotify green
+    - Opens: SpotifyWindow component
+    - Features: Now playing, playlists, top tracks
+    
+    **Browser** - Embedded browser
+    - Icon: Browser icon with blue theme
+    - Opens: BrowserWindow component
+    - Default URL: https://iframee.vercel.app
+  </Tab>
+  
+  <Tab title="Utility">
+    **Settings** - Customization
+    - Icon: Settings icon with purple theme
+    - Opens: SettingsWindow component
+    - Features: Wallpaper change, theme selection
+    
+    **Pranav AI** - AI Chatbot
+    - Icon: Message circle with purple theme
+    - Opens: PranavChatWindow component
+    - Interactive AI assistant
+  </Tab>
+</Tabs>
+
+### Icon Interaction
+
+Icons support both single-click (mobile/tablet) and double-click (desktop) interactions:
+
+```tsx
+// From DesktopIcons.tsx:200-237
+const handleIconClick = (
+  e: React.MouseEvent | React.KeyboardEvent,
+  iconName: string,
+  action?: () => void
+) => {
+  const isKeyboard = (e as React.MouseEvent).detail === 0;
+  
+  // Mobile/tablet: Open immediately
+  if (deviceType === 'mobile' || deviceType === 'tablet' || isKeyboard) {
+    openApp(iconName, action);
+    return;
+  }
+  
+  // Desktop: Double-click required
+  if (selectedIcon === iconName) {
+    openApp(iconName, action);
+    setSelectedIcon(null);
+  } else {
+    // Show "Double-click to open" tooltip
+    setSelectedIcon(iconName);
+    setClickHelpIcon(iconName);
+    // Auto-clear after 650ms
+    setTimeout(() => {
+      setSelectedIcon(null);
+    }, 650);
+  }
+};
+```
+
+<Info>
+  On desktop, a helpful tooltip appears after the first click: "Double-click to open"
+</Info>
+
+### Performance: Prefetching
+
+Icons prefetch their window components on hover for instant loading:
+
+```tsx
+// From DesktopIcons.tsx:131-149
+const prefetchMap: Record<string, () => Promise<unknown>> = {
+  'About Me': () => import('../windows/AboutWindow'),
+  'Books': () => import('../windows/BooksWindow'),
+  'Projects': () => import('../windows/ProjectsWindow'),
+  'Skills': () => import('../windows/SkillsWindow'),
+  // ...
+};
+
+const handlePrefetch = (iconName: string) => {
+  if (prefetchedSet.has(iconName)) return;
+  prefetchedSet.add(iconName);
+  prefetchMap[iconName]?.();
+};
+
+// Usage in icon rendering
+<motion.button
+  onMouseEnter={() => handlePrefetch(icon.name)}
+  // ...
+>
+```
+
+## Floating Dock
+
+The floating dock is powered by the `FloatingDock` component from `app/components/ui/floating-dock.tsx` and configured in `app/components/Navbar.tsx`.
+
+### Dock Items
+
+```tsx
+// From Navbar.tsx:39-76
+const links = [
+  {
+    title: 'Home',
+    icon: <IconHome className="h-full w-full" />,
+    href: '#',
+  },
+  {
+    title: 'Settings',
+    icon: <IconSettings className="h-full w-full" />,
+    href: '#',
+    action: () => setShowSettings(true),
+  },
+  {
+    title: 'Games',
+    icon: <IconDeviceGamepad2 size={24} />,
+    href: '#',
+    action: () => setShowGames(true),
+  },
+  {
+    title: 'Twitter',
+    icon: <IconBrandX className="h-full w-full" />,
+    href: 'https://x.com/_pranav69',
+  },
+  {
+    title: 'GitHub',
+    icon: <IconBrandGithub className="h-full w-full" />,
+    href: 'https://github.com/pranav322',
+  },
+];
+```
+
+### Desktop vs Mobile
+
+The dock adapts its UI based on screen size:
+
+<Tabs>
+  <Tab title="Desktop">
+    **Desktop Dock (> 768px)**
+    
+    Horizontal dock with macOS-style magnification effect:
+    
+    ```tsx
+    // From floating-dock.tsx:128-152
+    const FloatingDockDesktop = ({ items, className }) => {
+      let mouseX = useMotionValue(Infinity);
+      
+      return (
+        <motion.div
+          onMouseMove={e => mouseX.set(e.pageX)}
+          onMouseLeave={() => mouseX.set(Infinity)}
+          className="hidden md:flex h-16 gap-2 lg:gap-4 items-end rounded-2xl bg-gray-50 dark:bg-neutral-900 px-3 lg:px-4 pb-3"
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+        >
+          {items.map(item => (
+            <IconContainer mouseX={mouseX} key={item.title} {...item} />
+          ))}
+        </motion.div>
+      );
+    };
+    ```
+    
+    **Magnification Effect:**
+    
+    ```tsx
+    // From floating-dock.tsx:182-213
+    let distance = useTransform(mouseX, val => {
+      let bounds = boundsRef.current;
+      return val - bounds.x - bounds.width / 2;
+    });
+    
+    // Scale from 40px to 80px based on distance
+    let widthTransform = useTransform(distance, [-150, 0, 150], [40, 80, 40]);
+    let heightTransform = useTransform(distance, [-150, 0, 150], [40, 80, 40]);
+    
+    let width = useSpring(widthTransform, {
+      mass: 0.1,
+      stiffness: 150,
+      damping: 12,
+    });
+    ```
+  </Tab>
+  
+  <Tab title="Mobile">
+    **Mobile Dock (< 768px)**
+    
+    Expandable menu button in bottom-right corner:
+    
+    ```tsx
+    // From floating-dock.tsx:44-126
+    const FloatingDockMobile = ({ items, className }) => {
+      const [open, setOpen] = useState(false);
+      
+      return (
+        <div className={cn('relative block md:hidden', className)}>
+          <AnimatePresence>
+            {open && (
+              <motion.div className="absolute bottom-full mb-2 right-0 flex flex-col gap-2">
+                {items.map((item, idx) => (
+                  <motion.div
+                    key={item.title}
+                    initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                    transition={{ delay: (items.length - 1 - idx) * 0.05 }}
+                  >
+                    {/* Item content */}
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          <motion.button
+            onClick={() => setOpen(!open)}
+            className="h-12 w-12 rounded-full bg-gray-50 dark:bg-neutral-800"
+          >
+            <motion.div animate={{ rotate: open ? 45 : 0 }}>
+              <IconLayoutNavbarCollapse className="h-5 w-5" />
+            </motion.div>
+          </motion.button>
+        </div>
+      );
+    };
+    ```
+  </Tab>
+</Tabs>
+
+## Responsive Behavior
+
+### Device Detection
+
+```tsx
+// From DesktopIcons.tsx:5-42
+const useDeviceType = () => {
+  const [deviceType, setDeviceType] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  
+  useEffect(() => {
+    const checkDeviceType = () => {
+      const width = window.innerWidth;
+      
+      if (width < 640) {
+        setDeviceType('mobile');
+      } else if (width < 1024) {
+        setDeviceType('tablet');
+      } else {
+        setDeviceType('desktop');
+      }
+    };
+    
+    checkDeviceType();
+    window.addEventListener('resize', checkDeviceType);
+    return () => window.removeEventListener('resize', checkDeviceType);
+  }, []);
+  
+  return { deviceType, windowSize };
+};
+```
+
+### Layout Adjustments
+
+| Device | Icon Size | Layout | Spacing |
+|--------|-----------|--------|----------|
+| **Mobile** | 16w (64px) | Vertical wrap | 12px gap |
+| **Tablet** | 20w (80px) | Flexible wrap | 16px gap |
+| **Desktop** | 20w (80px) | Multi-column | 16px gap |
+
+## Theme System
+
+Icons adapt to the current theme from `ThemeContext`:
+
+```tsx
+// From DesktopIcons.tsx:239-298
+const icons = useMemo(
+  () => [
+    {
+      name: 'About Me',
+      icon: <IconUser size={32} />,
+      color: currentTheme.colors.iconBlue,
+    },
+    {
+      name: 'Projects',
+      icon: <IconFolder size={32} />,
+      color: currentTheme.colors.iconYellow,
+    },
+    {
+      name: 'Skills',
+      icon: <IconTools size={32} />,
+      color: currentTheme.colors.iconGreen,
+    },
+    // ...
+  ],
+  [currentTheme]
+);
+```
+
+## Code Example: Main Page Integration
+
+```tsx
+// From app/page.tsx:19-86
+export default function Home() {
+  const [isCLI, setIsCLI] = useState(false);
+  const [wallpaper, setWallpaper] = useState<string | null>(null);
+  
+  const handleWallpaperChange = (newWallpaper: string) => {
+    setWallpaper(newWallpaper);
+  };
+  
+  const backgroundStyle = wallpaper
+    ? {
+        backgroundImage: `url(${wallpaper})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }
+    : {};
+  
+  return (
+    <div className="relative h-screen w-full" style={backgroundStyle}>
+      {/* Quote component (desktop mode only) */}
+      {!isCLI && <Quote />}
+      
+      {/* Desktop icons */}
+      <div className="relative h-full flex flex-col">
+        {!isCLI && <DesktopIcons onWallpaperChange={handleWallpaperChange} />}
+        
+        {/* Toggle button */}
+        <div className="flex-grow flex items-center justify-center">
+          <ToggleButton isCLI={isCLI} onToggle={() => setIsCLI(!isCLI)} />
+        </div>
+        
+        {/* Floating dock (desktop mode only) */}
+        {!isCLI && (
+          <div className="fixed bottom-4 sm:bottom-8 left-0 right-0 flex justify-center z-40">
+            <FloatingDockDemo onWallpaperChange={handleWallpaperChange} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+## Next Steps
+
+<Card title="Window System" icon="window-maximize" href="/features/window-system">
+  Learn how windows work when you click on desktop icons
+</Card>

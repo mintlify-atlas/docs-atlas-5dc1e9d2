@@ -1,0 +1,638 @@
+---
+title: Embeddings System
+description: Deep dive into embedding generation with sentence-transformers
+---
+
+# Embeddings System
+
+Learn how Pranav AI generates vector embeddings for semantic search.
+
+## What are Embeddings?
+
+Embeddings are vector representations of text that capture semantic meaning:
+
+```
+Text: "Python programming language"
+
+Embedding: [0.123, -0.456, 0.789, -0.234, ...] (384 dimensions)
+```
+
+**Key Properties**:
+
+- **Similar text** → **Similar vectors** (close in vector space)
+- **Different text** → **Different vectors** (far in vector space)
+- **Semantic understanding**: Captures meaning, not just keywords
+
+### Example
+
+```python
+# These have high similarity (same meaning)
+embedding("Python developer")     # [0.12, 0.45, ...]
+embedding("Python programmer")    # [0.13, 0.47, ...]  # Similar!
+
+# These have low similarity (different meaning)
+embedding("Python developer")     # [0.12, 0.45, ...]
+embedding("snake species")        # [-0.67, 0.23, ...] # Different!
+```
+
+## Implementation
+
+### Model Configuration
+
+From `src/config.py:19`:
+
+```python
+class Settings(BaseSettings):
+    embedding_model: str = "all-MiniLM-L6-v2"
+    embedding_dimension: int = 384
+```
+
+From `src/embeddings.py:12`:
+
+```python
+@lru_cache()
+def get_embedding_model() -> SentenceTransformer:
+    """Get cached embedding model instance."""
+    return SentenceTransformer(settings.embedding_model)
+```
+
+**Model**: `all-MiniLM-L6-v2`
+
+<CardGroup cols={2}>
+  <Card title="Fast" icon="bolt">
+    ~10-50ms per embedding on CPU
+  </Card>
+  <Card title="Compact" icon="compress">
+    ~80MB model size
+  </Card>
+  <Card title="Free" icon="dollar-sign">
+    No API costs, runs locally
+  </Card>
+  <Card title="Quality" icon="star">
+    384 dimensions, good accuracy
+  </Card>
+</CardGroup>
+
+### Model Loading
+
+The model is loaded once and cached:
+
+```python
+# First call: Downloads and loads model (~80MB)
+model = get_embedding_model()  # ~2-5 seconds
+
+# Subsequent calls: Returns cached instance
+model = get_embedding_model()  # <1ms
+```
+
+**Download location**: `~/.cache/torch/sentence_transformers/`
+
+## Embedding Generation
+
+### Single Text
+
+From `src/embeddings.py:18`:
+
+```python
+def generate_embedding(text: str) -> List[float]:
+    """Generate embedding for a single text."""
+    model = get_embedding_model()
+    embedding = model.encode(text, convert_to_numpy=True)
+    return embedding.tolist()
+```
+
+**Usage**:
+
+```python
+from src.embeddings import generate_embedding
+
+query = "What are Pranav's Python skills?"
+embedding = generate_embedding(query)
+
+print(len(embedding))  # 384
+print(embedding[:5])   # [0.123, -0.456, 0.789, -0.234, 0.567]
+```
+
+**Performance**: ~10-50ms on CPU
+
+### Batch Processing
+
+From `src/embeddings.py:25`:
+
+```python
+def generate_embeddings(texts: List[str]) -> List[List[float]]:
+    """Generate embeddings for multiple texts (batch processing)."""
+    model = get_embedding_model()
+    embeddings = model.encode(
+        texts, 
+        convert_to_numpy=True, 
+        show_progress_bar=True
+    )
+    return embeddings.tolist()
+```
+
+**Usage**:
+
+```python
+from src.embeddings import generate_embeddings
+
+chunks = [
+    "Pranav is a Python developer...",
+    "He has experience with FastAPI...",
+    "Built RAG systems using pgvector..."
+]
+
+embeddings = generate_embeddings(chunks)
+
+print(len(embeddings))      # 3
+print(len(embeddings[0]))   # 384
+```
+
+**Performance**: ~500ms for 12 chunks
+
+**Why batch processing?**
+
+```python
+# Good: Batch processing
+embeddings = generate_embeddings(chunks)  # ~500ms for 12 chunks
+
+# Bad: One at a time
+embeddings = []
+for chunk in chunks:
+    embedding = generate_embedding(chunk)  # ~50ms × 12 = 600ms
+```
+
+Batch processing is ~10-20% faster due to:
+- Model parallelization
+- Reduced Python overhead
+- Better GPU utilization (if available)
+
+## Text Chunking
+
+### Implementation
+
+From `src/embeddings.py:32`:
+
+```python
+def chunk_text(
+    text: str, 
+    chunk_size: int = 1000, 
+    chunk_overlap: int = 200
+) -> List[str]:
+    """
+    Split text into overlapping chunks.
+    
+    Args:
+        text: Text to split
+        chunk_size: Maximum characters per chunk (default: 1000)
+        chunk_overlap: Overlap between chunks (default: 200)
+    
+    Returns:
+        List of text chunks
+    """
+```
+
+### Algorithm
+
+The chunking algorithm tries to break at natural boundaries:
+
+<Steps>
+  <Step title="Check if text fits in one chunk">
+    ```python
+    if len(text) <= chunk_size:
+        return [text]
+    ```
+    
+    If text is small enough, return as-is.
+  </Step>
+  
+  <Step title="Look for paragraph break">
+    ```python
+    para_break = text.rfind('\n\n', start, end)
+    if para_break > start + chunk_size // 2:
+        end = para_break + 2
+    ```
+    
+    Try to break at paragraph boundaries first (double newline).
+  </Step>
+  
+  <Step title="Look for sentence break">
+    ```python
+    for sep in ['. ', '! ', '? ', '\n']:
+        sent_break = text.rfind(sep, start, end)
+        if sent_break > start + chunk_size // 2:
+            end = sent_break + len(sep)
+            break
+    ```
+    
+    If no paragraph break, look for sentence endings.
+  </Step>
+  
+  <Step title="Split at chunk_size">
+    ```python
+    chunk = text[start:end].strip()
+    if chunk:
+        chunks.append(chunk)
+    ```
+    
+    If no good break point, split at chunk_size.
+  </Step>
+  
+  <Step title="Add overlap">
+    ```python
+    start = end - chunk_overlap
+    ```
+    
+    Next chunk starts 200 characters before end of current chunk.
+  </Step>
+</Steps>
+
+### Example
+
+**Input text** (1500 characters):
+
+```
+Pranav is a software engineer with 5 years of experience. He specializes 
+in backend development using Python and Go.
+
+He has built several RAG systems using Azure OpenAI and pgvector. His 
+experience includes document processing, embedding generation, and vector 
+search optimization.
+
+In his spare time, he contributes to open source projects and writes 
+technical blog posts about AI and machine learning.
+```
+
+**Output chunks** (1000 chars, 200 overlap):
+
+```python
+chunks = [
+    # Chunk 0 (0-1000)
+    "Pranav is a software engineer...optimization.\n\n",
+    
+    # Chunk 1 (800-1500) - starts 200 before previous end
+    "optimization.\n\nIn his spare time...machine learning."
+]
+```
+
+### Why Overlap?
+
+Overlapping chunks prevents information loss:
+
+**Without overlap**:
+```
+Chunk 1: "...experience with FastAPI and"
+Chunk 2: "Django for building REST APIs..."
+```
+
+**With overlap**:
+```
+Chunk 1: "...experience with FastAPI and Django for..."
+Chunk 2: "...FastAPI and Django for building REST APIs..."
+```
+
+Both chunks contain the full phrase "FastAPI and Django for building REST APIs".
+
+## Embedding Quality
+
+### Similarity Examples
+
+Using cosine similarity (0-1 scale):
+
+| Text 1 | Text 2 | Similarity |
+|--------|--------|------------|
+| "Python developer" | "Python programmer" | 0.89 |
+| "Backend engineer" | "Backend developer" | 0.85 |
+| "FastAPI framework" | "Django framework" | 0.72 |
+| "Python developer" | "JavaScript developer" | 0.54 |
+| "Python developer" | "snake species" | 0.12 |
+
+### Testing Embeddings
+
+```python
+from src.embeddings import generate_embedding
+import numpy as np
+
+def cosine_similarity(a, b):
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+# Test semantic similarity
+text1 = "Python backend developer"
+text2 = "Python backend programmer"
+text3 = "Frontend React developer"
+
+emb1 = generate_embedding(text1)
+emb2 = generate_embedding(text2)
+emb3 = generate_embedding(text3)
+
+print(f"text1 vs text2: {cosine_similarity(emb1, emb2):.3f}")  # High (~0.85)
+print(f"text1 vs text3: {cosine_similarity(emb1, emb3):.3f}")  # Lower (~0.55)
+```
+
+## Model Comparison
+
+Popular sentence-transformers models:
+
+| Model | Dimensions | Size | Speed | Quality |
+|-------|------------|------|-------|----------|
+| **all-MiniLM-L6-v2** | 384 | 80 MB | Very Fast | Good |
+| all-MiniLM-L12-v2 | 384 | 120 MB | Fast | Better |
+| all-mpnet-base-v2 | 768 | 420 MB | Medium | Best |
+| paraphrase-MiniLM-L6-v2 | 384 | 80 MB | Very Fast | Good |
+
+### Changing Models
+
+To use a different model:
+
+**1. Update configuration**:
+
+```bash .env
+EMBEDDING_MODEL=all-mpnet-base-v2
+EMBEDDING_DIMENSION=768
+```
+
+**2. Update database schema**:
+
+```sql
+-- Modify vector column dimension
+ALTER TABLE chunks 
+ALTER COLUMN embedding TYPE vector(768);
+```
+
+**3. Regenerate embeddings**:
+
+```python
+# Reprocess all existing documents
+for document in documents:
+    chunks = chunk_text(document.content)
+    embeddings = generate_embeddings(chunks)
+    # Update database...
+```
+
+<Warning>
+  Changing models requires regenerating all embeddings! Old embeddings won't be compatible.
+</Warning>
+
+## Performance Optimization
+
+### GPU Acceleration
+
+For faster embedding generation, use GPU:
+
+```python
+import torch
+
+# Check if CUDA is available
+if torch.cuda.is_available():
+    device = 'cuda'
+else:
+    device = 'cpu'
+
+model = SentenceTransformer(settings.embedding_model, device=device)
+```
+
+**Speedup**: ~10-20x faster on GPU vs CPU
+
+### Caching Embeddings
+
+For frequently queried texts, cache embeddings:
+
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=1000)
+def generate_embedding_cached(text: str) -> List[float]:
+    return generate_embedding(text)
+```
+
+### Batch Size Tuning
+
+For very large batches, tune batch size:
+
+```python
+def generate_embeddings_large(
+    texts: List[str], 
+    batch_size: int = 32
+) -> List[List[float]]:
+    model = get_embedding_model()
+    embeddings = model.encode(
+        texts,
+        batch_size=batch_size,  # Process 32 at a time
+        show_progress_bar=True
+    )
+    return embeddings.tolist()
+```
+
+## Storage in PostgreSQL
+
+From `src/database.py:57`:
+
+```python
+class Chunk(Base):
+    embedding = mapped_column(Vector(384))
+```
+
+Embeddings are stored as pgvector columns:
+
+```sql
+CREATE TABLE chunks (
+    id UUID PRIMARY KEY,
+    embedding VECTOR(384),
+    ...
+);
+```
+
+### Inserting Embeddings
+
+```python
+chunk = Chunk(
+    content="Pranav is a Python developer...",
+    embedding=embedding  # List[float] with 384 elements
+)
+db.add(chunk)
+await db.commit()
+```
+
+SQLAlchemy with pgvector automatically handles the conversion:
+
+```python
+List[float] → PostgreSQL VECTOR type
+```
+
+### Querying Embeddings
+
+```python
+from sqlalchemy import text
+
+# Cosine similarity search
+query = text(f"""
+    SELECT content, 
+           1 - (embedding <=> '{embedding_str}'::vector) as similarity
+    FROM chunks
+    ORDER BY embedding <=> '{embedding_str}'::vector
+    LIMIT 5
+""")
+
+results = await db.execute(query)
+```
+
+## Advanced Techniques
+
+<AccordionGroup>
+  <Accordion title="Dimensionality Reduction">
+    Reduce embedding dimensions with PCA:
+    
+    ```python
+    from sklearn.decomposition import PCA
+    
+    # Reduce 384 → 128 dimensions
+    pca = PCA(n_components=128)
+    reduced = pca.fit_transform(embeddings)
+    
+    # Tradeoff: 3x smaller, slightly lower quality
+    ```
+  </Accordion>
+  
+  <Accordion title="Quantization">
+    Quantize embeddings for faster search:
+    
+    ```python
+    # Convert float32 → int8
+    quantized = (embeddings * 127).astype(np.int8)
+    
+    # Tradeoff: 4x smaller, slightly lower quality
+    ```
+  </Accordion>
+  
+  <Accordion title="Multi-vector Embeddings">
+    Store multiple embeddings per chunk:
+    
+    ```python
+    # Generate from different perspectives
+    emb_semantic = generate_embedding(chunk)
+    emb_keyword = generate_embedding_keyword(chunk)
+    
+    # Store both, search both, combine scores
+    ```
+  </Accordion>
+  
+  <Accordion title="Fine-tuning">
+    Fine-tune model on domain-specific data:
+    
+    ```python
+    from sentence_transformers import SentenceTransformer, InputExample
+    from sentence_transformers import losses
+    from torch.utils.data import DataLoader
+    
+    # Create training examples
+    examples = [
+        InputExample(texts=['query', 'positive doc'], label=1.0),
+        InputExample(texts=['query', 'negative doc'], label=0.0),
+    ]
+    
+    # Fine-tune
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    train_dataloader = DataLoader(examples, batch_size=16)
+    train_loss = losses.CosineSimilarityLoss(model)
+    model.fit(
+        train_objectives=[(train_dataloader, train_loss)],
+        epochs=1
+    )
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Debugging Embeddings
+
+### Inspect Embedding Values
+
+```python
+import numpy as np
+
+embedding = generate_embedding("Python developer")
+
+print(f"Shape: {len(embedding)}")  # 384
+print(f"Min: {min(embedding):.3f}")  # e.g., -0.456
+print(f"Max: {max(embedding):.3f}")  # e.g., 0.789
+print(f"Mean: {np.mean(embedding):.3f}")  # Close to 0
+print(f"Std: {np.std(embedding):.3f}")  # ~0.2-0.4
+```
+
+### Visualize Embeddings
+
+Reduce to 2D for visualization:
+
+```python
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+
+# Generate embeddings for multiple texts
+texts = [
+    "Python developer",
+    "Python programmer",
+    "JavaScript developer",
+    "Frontend engineer",
+    "Database administrator"
+]
+embeddings = [generate_embedding(t) for t in texts]
+
+# Reduce to 2D
+tsne = TSNE(n_components=2)
+embeddings_2d = tsne.fit_transform(embeddings)
+
+# Plot
+plt.scatter(embeddings_2d[:, 0], embeddings_2d[:, 1])
+for i, text in enumerate(texts):
+    plt.annotate(text, (embeddings_2d[i, 0], embeddings_2d[i, 1]))
+plt.show()
+```
+
+### Test Retrieval Quality
+
+```python
+async def test_retrieval(query: str, expected_doc: str):
+    """Test if expected document is retrieved for query."""
+    query_emb = generate_embedding(query)
+    
+    # Search
+    results = await vector_search(query_emb, limit=5)
+    
+    # Check if expected doc is in top 5
+    found = any(r.document_name == expected_doc for r in results)
+    
+    print(f"Query: {query}")
+    print(f"Expected: {expected_doc}")
+    print(f"Found: {found}")
+    print(f"Top result: {results[0].document_name} (similarity: {results[0].similarity})")
+
+# Test
+await test_retrieval(
+    query="Python backend skills",
+    expected_doc="backend_resume.pdf"
+)
+```
+
+## Implementation Reference
+
+Key files:
+
+- `src/embeddings.py:18` - generate_embedding()
+- `src/embeddings.py:25` - generate_embeddings()
+- `src/embeddings.py:32` - chunk_text()
+- `src/embeddings.py:12` - get_embedding_model()
+- `src/config.py:19` - Embedding configuration
+- `src/database.py:57` - Vector column definition
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="RAG System" icon="brain" href="/api/rag-system">
+    See how embeddings are used in RAG
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/api/architecture">
+    Understand the full system
+  </Card>
+  <Card title="Documents" icon="file" href="/api/documents">
+    Learn about document processing
+  </Card>
+</CardGroup>
